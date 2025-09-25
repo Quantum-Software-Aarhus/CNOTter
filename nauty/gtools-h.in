@@ -332,7 +332,7 @@ void fgroup_inv(graph*,int,int,char*,int*,int*,void(*)(graph*,int*,int*,int,
                 int,int,int*,int,boolean,int,int),int,int,int);
 int istransitive(graph*,int,int,graph*);
 void tg_canonise(graph*,graph*,int,int);
-void countorbits(graph*,int,int,boolean,double*,int*,
+void countorbits(graph*,int,int,boolean,uint64_t*,
          int*,int*,size_t*,size_t*);
 
 extern TLS_ATTR int readg_code;

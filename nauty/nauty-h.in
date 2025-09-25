@@ -1117,10 +1117,7 @@ typedef set nauty_set;
 
 typedef struct
 {
-    double grpsize1;        /* size of group is */
-    int grpsize2;           /*    grpsize1 * 10^grpsize2 */
-/* #define groupsize1 grpsize1     for backwards compatibility */
-/* #define groupsize2 grpsize2     for backwards compatibility */
+    uint64_t grpsize;        /* size of group */
     int numorbits;          /* number of orbits in group */
     int numgenerators;      /* number of generators found */
     int errstatus;          /* if non-zero : an error code */
@@ -1144,7 +1141,7 @@ typedef struct
 #define NAUKILLED    5      /* nauty is terminated early by caught signal */
 
 /* manipulation of real approximation to group size */
-#define MULTIPLY(s1,s2,i) if ((s1 *= i) >= 1e10) {s1 /= 1e10; s2 += 10;}
+#define MULTIPLY(s,i) { s *= i; }
 
 struct optionstruct;  /* incomplete definition */
 
@@ -1529,7 +1526,7 @@ void nautil_freedyn(void);
 void naugraph_freedyn(void);
 void densenauty(graph*,int*,int*,int*,
                         optionblk*,statsblk*,int,int,graph*);
-void writegroupsize(FILE*,double,int);
+void writegroupsize(FILE*,uint64_t);
 
 extern int labelorg;   /* Declared in nautil.c */
 extern volatile int nauty_kill_request;  /* Also declared in nautil.c */

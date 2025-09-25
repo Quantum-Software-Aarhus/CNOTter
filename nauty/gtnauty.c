@@ -1038,10 +1038,10 @@ arcorbtoedgeorb(void)
 
 void
 countorbits_sg(sparsegraph *sg, boolean digraph,
-        double *grpsize1, int *grpsize2,
+        uint64_t *grpsize,
         int *vorbits, int *fixedpts, size_t *eorbits, size_t *aorbits)
 /* Find:
-   (grpsize1,grpsize2) = group size as in the nauty options structure.
+   grpsize = group size as in the nauty options structure.
    vorbits = number of orbits on vertices
    fixedpts = number of fixed points on vertices
    eorbits = number of orbits on undirected edges
@@ -1054,10 +1054,10 @@ countorbits_sg(sparsegraph *sg, boolean digraph,
 
 void
 countorbits(graph *g, int m, int n, boolean digraph,
-        double *grpsize1, int *grpsize2, int *vorbits,
+        uint64_t *grpsize, int *vorbits,
         int *fixedpts, size_t *eorbits, size_t *aorbits)
 /* Find:
-   (grpsize1,grpsize2) = group size as in the nauty options structure.
+   grpsize = group size as in the nauty options structure.
    vorbits = number of orbits on vertices
    fixedpts = number of fixed points on vertices
    eorbits = number of orbits on undirected edges
@@ -1081,9 +1081,8 @@ countorbits(graph *g, int m, int n, boolean digraph,
 
     if (numarcs == 0)
     {
-        *grpsize1 = 1.0;
-        *grpsize2 = 0;
-        for (i = 2; i <= n; ++i) MULTIPLY(*grpsize1,*grpsize2,i);
+        *grpsize = 1;
+        for (i = 2; i <= n; ++i) MULTIPLY(*grpsize,i);
         *vorbits = 1;
         *fixedpts = (n == 1 ? 1 : 0);
         *eorbits = 1;
@@ -1114,8 +1113,7 @@ countorbits(graph *g, int m, int n, boolean digraph,
         nauty(g,lab,ptn,NULL,orbits,&goptions,&stats,work,2*500*m,m,n,NULL);
     }
  
-    *grpsize1 = stats.grpsize1;
-    *grpsize2 = stats.grpsize2;
+    *grpsize = stats.grpsize;
     *vorbits = stats.numorbits;
 
     if (*vorbits == n)

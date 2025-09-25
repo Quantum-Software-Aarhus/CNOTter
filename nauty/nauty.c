@@ -317,8 +317,7 @@ nauty(graph *g_arg, int *lab, int *ptn, set *active_arg,
 #endif
     if (n_arg == 0)   /* Special code for zero-sized graph */
     {
-        stats_arg->grpsize1 = 1.0;
-        stats_arg->grpsize2 = 0;
+        stats_arg->grpsize = 1;
         stats_arg->numorbits = 0;
         stats_arg->numgenerators = 0;
         stats_arg->errstatus = 0;
@@ -466,8 +465,7 @@ nauty(graph *g_arg, int *lab, int *ptn, set *active_arg,
     if (doschreier) newgroup(&gp,&gens,n);
 
     for (i = 0; i < n; ++i) orbits[i] = i;
-    stats->grpsize1 = 1.0;
-    stats->grpsize2 = 0;
+    stats->grpsize = 1;
     stats->numgenerators = 0;
     stats->numnodes = 0;
     stats->numbadleaves = 0;
@@ -690,7 +688,7 @@ firstpathnode(int *lab, int *ptn, int level, int numcells)
         if (orbits[tv] == tv1)  /* ie, in same orbit as tv1 */
             ++index;
     }
-    MULTIPLY(stats->grpsize1,stats->grpsize2,index);
+    MULTIPLY(stats->grpsize,index);
 
     if (tcellsize == index && allsamelevel == level + 1)
         --allsamelevel;
@@ -1214,7 +1212,7 @@ void
 extra_level(int level, int *lab, int *ptn, int numcells, int tv1, int index,
         int tcellsize, int childcount, int n)
 {
-    MULTIPLY(stats->grpsize1,stats->grpsize2,index);
+    MULTIPLY(stats->grpsize,index);
     if (domarkers)
         writemarker(level,tv1,index,tcellsize,stats->numorbits,numcells);
     OPTCALL(userlevelproc)(lab,ptn,level,orbits,stats,tv1,index,tcellsize,

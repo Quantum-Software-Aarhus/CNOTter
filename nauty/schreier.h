@@ -60,7 +60,7 @@ void dumpschreier(FILE *f, schreier *gp, permnode *gens, int n);
 int schreier_gens(permnode *gens);
 void deleteunmarked(permnode **gens);
 void grouporder(int *fix, int nfix,  schreier *gp, permnode **gens,
-		double *grpsize1, int *grpsize2, int n);
+		uint64_t *grpsize, int n);
 void schreier_check(int wordsize, int m, int n, int version);
 
 #ifdef __cplusplus

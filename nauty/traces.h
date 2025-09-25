@@ -49,8 +49,7 @@ typedef struct TracesOptions {
 = { FALSE, FALSE, FALSE, FALSE, TRUE, 0, NULL, 0, 0, NULL, NULL, NULL, FALSE }
 
 typedef struct TracesStats {
-	double grpsize1;
-	int grpsize2;
+	uint64_t grpsize;
 	int numgenerators;
 	int numorbits;
 	int treedepth;

@@ -116,10 +116,10 @@ Getting information:
     schreier_gens(gens)
         - Return the number of stored generators.
 
-    grouporder(fix, nfix, gp, &gens, &grpsize1, &grpsize2, n);
+    grouporder(fix, nfix, gp, &gens, &grpsize, n);
 	- Make an estimate of the group size using the base or
-          base-less-one fix[0..nfix-1].  grpsize1 is double and
-          grpsize2 is int, as in nauty.h.  The value returned is
+          base-less-one fix[0..nfix-1].  grpsize is uint64_t,
+          as in nauty.h.  The value returned is
           the product of the orbit sizes at each level times the
           largest orbit size at the end.  Correct with some
           probability.

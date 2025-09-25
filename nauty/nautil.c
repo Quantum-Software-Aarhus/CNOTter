@@ -662,27 +662,14 @@ longprune(set *tcell, set *fix, set *bottom, set *top, int m)
 
 /*****************************************************************************
 *                                                                            *
-*  writegroupsize(f,gpsize1,gpsize2) writes a real number gpsize1*10^gpsize2 *
-*  It is assumed that gpsize1 >= 1 and that gpsize1 equals an integer in the *
-*  case that gpsize2==0.  These assumptions are true for group sizes         *
-*  computed by nauty.                                                        *
+*  writegroupsize(f,gpsize) writes a longint gpsize to file f                *
 *                                                                            *
 *****************************************************************************/
 
 void
-writegroupsize(FILE *f, double gpsize1, int gpsize2)
+writegroupsize(FILE *f, uint64_t gpsize)
 {
-    if (gpsize2 == 0)
-        fprintf(f,"%.0f",gpsize1+0.1);
-    else
-    {   
-        while (gpsize1 >= 10.0)
-        {   
-            gpsize1 /= 10.0;
-            ++gpsize2;
-        }
-        fprintf(f,"%14.12fe%d",gpsize1,gpsize2);
-    }
+    fprintf(f,"%lu",gpsize);
 }
 
 /*****************************************************************************

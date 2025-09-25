@@ -1036,7 +1036,7 @@ dumpschreier(FILE *f, schreier *gp, permnode *ring, int n)
 
 void
 grouporder(int *fix, int nfix, schreier *gp, permnode **ring, 
-                           double *grpsize1, int *grpsize2, int n)
+                           uint64_t *grpsize, int n)
 /* process the base like in getorbits(), then return the product of the
  * orbits along the base, using the largest orbit at the end if the
  * base is not complete.
@@ -1053,7 +1053,7 @@ grouporder(int *fix, int nfix, schreier *gp, permnode **ring,
     getorbits(fix,nfix,gp,ring,n);
     expandschreier(gp,ring,n);
     expandschreier(gp,ring,n);
-    *grpsize1 = 1.0; *grpsize2 = 0;
+    *grpsize = 1;
 
     for (i = 0, sh = gp; i < nfix; ++i, sh = sh->next)
     {
@@ -1061,7 +1061,7 @@ grouporder(int *fix, int nfix, schreier *gp, permnode **ring,
         fx = orb[sh->fixed];
         k = 0;
         for (j = fx; j < n; ++j) if (orb[j] == fx) ++k;
-        MULTIPLY(*grpsize1,*grpsize2,k);
+        MULTIPLY(*grpsize,k);
     }
 
     orb = sh->orbits;
@@ -1074,7 +1074,7 @@ grouporder(int *fix, int nfix, schreier *gp, permnode **ring,
             ++workperm[orb[i]];
             if (workperm[orb[i]] > k) k = workperm[orb[i]];
         }
-    MULTIPLY(*grpsize1,*grpsize2,k);
+    MULTIPLY(*grpsize,k);
 }
 
 /*****************************************************************************

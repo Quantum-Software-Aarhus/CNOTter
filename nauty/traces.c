@@ -269,8 +269,8 @@ static void NewPartSpine(int, int);
 static int FreeList(Candidate*, int);
 static int FixBase(int*, struct TracesVars*, Candidate*, int, int);
 static boolean FixedBase(int*, struct TracesVars*, Candidate*, int, int);
-static void factorial(double*, int*, int);
-static void factorial2(double*, int*, int);
+static void factorial(uint64_t*, int);
+static void factorial2(uint64_t*, int);
 static int CheckForAutomorphisms(Candidate*, Candidate*, struct TracesVars*, struct TracesInfo*, int, Partition*);
 static int CheckForSingAutomorphisms(Candidate*, Partition*, Candidate*, struct TracesVars*, struct TracesInfo*, int);
 static int CheckForMatching(Candidate*, Candidate*, Partition*, struct TracesVars*, struct TracesInfo*, int);
@@ -294,7 +294,7 @@ static void RemoveFromLevel(int, int, int, boolean);
 static int CompStage0(Partition*, Partition*, Candidate*, Candidate*, int, struct TracesVars*, struct TracesInfo*);
 static int CompStage1(Partition*, Partition*, Candidate*, Candidate*, int, struct TracesVars*, struct TracesInfo*);
 static int CompStage2(Partition*, Partition*, Candidate*, Candidate*, int, struct TracesVars*, struct TracesInfo*);
-static void grouporderplus(sparsegraph*, Candidate*, Partition*, permnode**, double*, int*, int, struct TracesVars*, struct TracesInfo*);
+static void grouporderplus(sparsegraph*, Candidate*, Partition*, permnode**, uint64_t*, int, struct TracesVars*, struct TracesInfo*);
 static boolean Prefix(Candidate*, Candidate*, int);
 static boolean findperm(permnode*, int*, int);
 static int spinelementorbsize(int*, int*, int, int);
@@ -331,7 +331,7 @@ static void WeightCodes (int);
 static void PrintWeightedGraph1(sparsegraph*, int, char[30]);
 //static void PrintWeightedGraph2(int n, char msg[30]);
 static void MakeDiscrete(Partition*, int);
-static void Complete(sparsegraph*, Candidate*, Partition*, int, TracesVars*, double*, int*,permnode**, int);
+static void Complete(sparsegraph*, Candidate*, Partition*, int, TracesVars*, uint64_t*,permnode**, int);
 static void Allocate_Traces_Structures(int);
 static void Allocate_refine_Structures(int);
 static void Initialize_Traces_Variables(TracesVars*, TracesOptions*, TracesStats*, int*, sparsegraph*, sparsegraph*, int);
@@ -1209,7 +1209,7 @@ Traces(sparsegraph *g_arg, int *lab, int *ptn,
                     AuxCand = AuxCand->next;
                 }
                 
-                grouporderplus(g_arg, BestCand, Spine[tv->maxtreelevel].part, &gensB, &(tv->stats->grpsize1), &(tv->stats->grpsize2), n, tv, ti);
+                grouporderplus(g_arg, BestCand, Spine[tv->maxtreelevel].part, &gensB, &(tv->stats->grpsize), n, tv, ti);
                 
                 if (tv->options->verbosity >= 2) {
                     LINE(32, "-")
@@ -1222,7 +1222,7 @@ Traces(sparsegraph *g_arg, int *lab, int *ptn,
                 if (canong_arg) memcpy(CurrPart->inv, BestCand->invlab, n*sizeof(int));
             }
             else {
-                grouporderplus(g_arg, AuxCand, Spine[tv->maxtreelevel].part, &gensB, &(tv->stats->grpsize1), &(tv->stats->grpsize2), n, tv, ti);
+                grouporderplus(g_arg, AuxCand, Spine[tv->maxtreelevel].part, &gensB, &(tv->stats->grpsize), n, tv, ti);
             }
             
             if (tv->options->verbosity >= 2) {
@@ -6336,7 +6336,7 @@ void CodeClassify(int Level, int code, int cell) {
 }
 
 void Complete(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, int cell, TracesVars *tv,
-              double *grpsize1, int *grpsize2, permnode **ring, int n) {
+              uint64_t *grpsize, permnode **ring, int n) {
     int i, k;    //int i, j, k;
     int arg, val;
 //    int numtemporbits;
@@ -7667,19 +7667,19 @@ void ExperimentalStep(Partition *NextPart, Candidate *NextCand,
     
 }
 
-void factorial(double *size1, int *size2, int k) {
+void factorial(uint64_t *size, int k) {
     int i;
     
     for(i = k; i; i--) {
-        MULTIPLY(*size1, *size2, i);
+        MULTIPLY(*size, i);
     }
 }
 
-void factorial2(double *size1, int *size2, int k) {
+void factorial2(uint64_t *size, int k) {
     int i;
     
     for(i = k; i > 0; i -= 2) {
-        MULTIPLY(*size1, *size2, i);
+        MULTIPLY(*size, i);
     }
 }
 
@@ -7855,7 +7855,7 @@ int given_gens(sparsegraph *g, permnode *gens, int *orbits, boolean digraph, str
 }
 
 void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, permnode **ring,
-                    double *grpsize1, int *grpsize2, int n, TracesVars *tv, TracesInfo *ti) {
+                    uint64_t *grpsize, int n, TracesVars *tv, TracesInfo *ti) {
     
     int i, i1, j, j0, j2, k, k1, k2, w, w1, w2, c, c1, c2, n1, n2;
     int prev, step, start, counts, StInd, CyInd, cycnum;
@@ -7879,15 +7879,15 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
             while (TrieNode->father) {
                 if (Factorials[TrieNode->level]) {
                     fprintf(outfile, "%d (%d!), ", TrieNode->name, TrieNode->index);
-                    factorial(grpsize1, grpsize2, TrieNode->index);
+                    factorial(grpsize, TrieNode->index);
                 } else {
                     if (TrieNode->father->name) {
                         fprintf(outfile, "%d (%d), ", TrieNode->name, TrieNode->index);
-                        MULTIPLY(tv->stats->grpsize1, tv->stats->grpsize2, TrieNode->index);
+                        MULTIPLY(tv->stats->grpsize, TrieNode->index);
                     }
                     else {
                         temp = spinelementorbsize(tv->orbits, Spine[tv->maxtreelevel].liststart->lab+Spine[1].tgtcell, Spine[1].tgtsize, TrieNode->vtx);
-                        MULTIPLY(*grpsize1, *grpsize2, temp);
+                        MULTIPLY(*grpsize, temp);
                         fprintf(outfile, "%d (%d)\n",
                                 TrieNode->name, temp);
                     }
@@ -7898,14 +7898,14 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
         else {
             while (TrieNode->father) {
                 if (Factorials[TrieNode->level]) {
-                    factorial(grpsize1, grpsize2, TrieNode->index);
+                    factorial(grpsize, TrieNode->index);
                 } else {
                     if (TrieNode->father->name) {
-                        MULTIPLY(tv->stats->grpsize1, tv->stats->grpsize2, TrieNode->index);
+                        MULTIPLY(tv->stats->grpsize, TrieNode->index);
                     }
                     else {
                         temp = spinelementorbsize(tv->orbits, Spine[tv->maxtreelevel].liststart->lab+Spine[1].tgtcell, Spine[1].tgtsize, TrieNode->vtx);
-                        MULTIPLY(*grpsize1, *grpsize2, temp);
+                        MULTIPLY(*grpsize, temp);
                     }
                 }
                 TrieNode = TrieNode->father;
@@ -8017,7 +8017,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                     }
                     
                     if (counts == Part->cls[i]) {
-                        factorial(grpsize1, grpsize2, Part->cls[i]);
+                        factorial(grpsize, Part->cls[i]);
                         if (tv->permInd) ResetAutom(tv->permInd, n, tv);
                         for (k=0; k<StInd/counts; k++) {
                             i1 = PERMSTACK[k];
@@ -8040,7 +8040,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                         }
                     }
                     else {
-                        factorial2(grpsize1, grpsize2, Part->cls[i]);
+                        factorial2(grpsize, Part->cls[i]);
                         for (j=0; j<counts; j++) {
                             j0 = j*(StInd/counts);
                             k1 = (j+1)*(StInd/counts);
@@ -8134,10 +8134,10 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                     
                     if (counts == Part->cls[i]) {
                         if (Part->inv[Cand->invlab[PERMSTACK[0]]] != Part->inv[Cand->invlab[PERMSTACK[StInd/counts-1]]]) {
-                            factorial(grpsize1, grpsize2, Part->cls[i]);
+                            factorial(grpsize, Part->cls[i]);
                         }
                         else {
-                            factorial2(grpsize1, grpsize2, 2*Part->cls[i]);
+                            factorial2(grpsize, 2*Part->cls[i]);
                             for (j=0; j<counts; j++) {
                                 j0 = j*(StInd/counts);
                                 k1 = (j+1)*(StInd/counts);
@@ -8170,7 +8170,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                         }
                     }
                     else {
-                        factorial2(grpsize1, grpsize2, Part->cls[i]);
+                        factorial2(grpsize, Part->cls[i]);
                         for (j=0; j<counts; j++) {
                             j0 = j*(StInd/counts);
                             k1 = (j+1)*(StInd/counts);
@@ -8283,7 +8283,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                                 }
                                 if (w == CYLGTH[i1]) { SPECIALGENERATORS }
                                 if (w == CYLGTH[i1]) {
-                                    MULTIPLY(*grpsize1, *grpsize2, CYLGTH[i1]/j);
+                                    MULTIPLY(*grpsize, CYLGTH[i1]/j);
                                     break;
                                 }
                             }
@@ -8299,7 +8299,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                                         SETPAIRSAUTANDTREE(CYCLES[w+k], CYCLES[((j-w+(w>j)*CYLGTH[i1]) % CYLGTH[i1]) + k])
                                     }
                                     SPECIALGENERATORS
-                                    MULTIPLY(*grpsize1, *grpsize2, 2);
+                                    MULTIPLY(*grpsize, 2);
                                     break;
                                 }
                             }
@@ -8313,7 +8313,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                                     SETPAIRSAUTANDTREE(CYCLES[w+k], CYCLES[CYLGTH[i1]-w+k])
                                 }
                                 SPECIALGENERATORS
-                                MULTIPLY(*grpsize1, *grpsize2, 2);
+                                MULTIPLY(*grpsize, 2);
                             }
                         }
                         k += CYLGTH[i1];
@@ -8351,7 +8351,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                                     }
                                     SPECIALGENERATORS
                                 }
-                                factorial(grpsize1, grpsize2, counts);
+                                factorial(grpsize, counts);
                             }
                         }
                         k += abs(CYLGTH[i1]);
@@ -8378,7 +8378,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
             if (Part->cls[i] > 1) {
                 tmp = Cand->lab[i];
                 if ((TheGraph[tmp].d == 1) && (TheGraph[TheGraph[tmp].e[0]].d == 1) && (i == Part->inv[Cand->invlab[TheGraph[tmp].e[0]]])) {
-                    factorial2(grpsize1, grpsize2, Part->cls[i]);
+                    factorial2(grpsize, Part->cls[i]);
                     /* the cell has size two */
                     if (Part->cls[i] == 2) {
                         val = Cand->lab[i+1];
@@ -8489,7 +8489,7 @@ void grouporderplus(sparsegraph *sg_orig, Candidate *Cand, Partition *Part, perm
                         }
                         SPECIALGENERATORS
                     }
-                    factorial(grpsize1, grpsize2, Part->cls[i]);
+                    factorial(grpsize, Part->cls[i]);
                     if (do_ngh) {
                         for (j=i; j<i+Part->cls[i]; j++) {
                             temp = TheGraph[Cand->lab[j]].e[0];
@@ -8599,8 +8599,7 @@ void Initialize_Traces_Variables(TracesVars *tv, TracesOptions *options_arg,
 }
 
 void Initialize_Traces_Statistics (TracesStats *stats_arg, int n) {
-    stats_arg->grpsize1 = 1;
-    stats_arg->grpsize2 = 0;
+    stats_arg->grpsize = 1;
     stats_arg->numorbits = n;
     stats_arg->treedepth= 0;
     stats_arg->numgenerators = 0;
@@ -9126,7 +9125,7 @@ MakeTree(arg, val, sg, n, tv, FALSE);
                                 Edge_Delete(value, NghCounts[value], Cand, tv);
                                 sge = TheGraph[value].e+TheGraph[value].d;
                                 if (NghCounts[value]>1) {
-                                    factorial(&(tv->stats->grpsize1), &(tv->stats->grpsize2), NghCounts[value]);
+                                    factorial(&(tv->stats->grpsize), NghCounts[value]);
                                     if (tv->permInd) ResetAutom(tv->permInd, n, tv);
                                     for (j0=0; j0<NghCounts[value]-1; j0++) {
                                         SETPAIRSAUTANDTREE_PREPROC(sge[j0], sge[j0+1])
@@ -9205,7 +9204,7 @@ MakeTree(arg, val, sg, n, tv, FALSE);
                         Edge_Delete(value, NghCounts[value], Cand, tv);
                         sge = TheGraph[value].e+TheGraph[value].d;
                         if (NghCounts[value] > 1) {
-                            factorial(&(tv->stats->grpsize1), &(tv->stats->grpsize2), NghCounts[value]);
+                            factorial(&(tv->stats->grpsize), NghCounts[value]);
                             
                             if (tv->permInd) ResetAutom(tv->permInd, n, tv);
                             for (j0=0; j0<NghCounts[value]-1; j0++) {

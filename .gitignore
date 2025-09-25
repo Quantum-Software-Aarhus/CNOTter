@@ -1,0 +1,15 @@
+nauty/.libs/
+nauty/*.o
+nauty/*.a
+nauty/*.lo
+nauty/*.la
+
+nauty/config.log
+nauty/config.status
+nauty/libtool
+nauty/makefile
+nauty/runalltests
+nauty/gtools.h
+nauty/nauty.h
+nauty/nauty.pc
+nauty/naututil.h
