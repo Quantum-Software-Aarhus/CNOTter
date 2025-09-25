@@ -1,9 +1,12 @@
+matrix_cnot?
+matrix_cnot?.txt
+
+# Nauty:
 nauty/.libs/
 nauty/*.o
 nauty/*.a
 nauty/*.lo
 nauty/*.la
-
 nauty/config.log
 nauty/config.status
 nauty/libtool
