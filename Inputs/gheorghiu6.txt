@@ -1,0 +1,11 @@
+1 1 0 1 1 0
+0 0 1 1 0 1
+1 0 1 0 1 0
+1 1 0 1 0 0
+1 1 1 1 0 0
+0 1 0 1 0 1
+
+From:
+V. Gheorghiu, J. Huang, Sarah Meng Li, M. Mosca, P. Mukhopadhyay,
+Reducing the CNOT count for Clifford+T circuits on NISQ architectures.
+https://arxiv.org/abs/2011.12191v4, 10 Oct 2022. Appendix B, Figure 3, p. 28

@@ -1,0 +1,10 @@
+0 0 1 1 1 0
+1 0 0 0 0 0
+0 1 0 0 0 0
+1 1 0 0 0 1
+0 0 0 1 0 0
+0 0 0 0 1 0
+
+Sergey Bravyi, Joseph A. Latone, Dmitri Maslov
+6-qubit Optimal Clifford Circuits
+https://arxiv.org/abs/2012.06074, Section 4, Fig. 3
