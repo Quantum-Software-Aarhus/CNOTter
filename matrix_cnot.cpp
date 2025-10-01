@@ -30,9 +30,9 @@
 #define SWAP 0 // SWAPS for free, enable with -DSWAP=1
 #endif
 
-
 #if SWAP==1
 #define NAUTY 1  // SWAP requires Nauty
+#define POLY 0  // SWAP is incompatible with POLY
 #endif
 
 #ifndef NAUTY
@@ -281,7 +281,14 @@ int main(int argc, char const *argv[]) {
     options.getcanon=true;   // we want the canonical graph
     options.defaultptn=true; // default coloring
 #endif
-    assert(1<=N && N<=8 && "not supported");
+    if (N<1 || N>8) {
+        printf("N={%u} not supported, only N=1..8\n", N);
+        exit(-1);
+    }
+    if (POLY==1 && SWAP==1) {
+        printf("Polynomial coefficients are not supported with SWAP\n");
+        exit(-1);
+    }
     printf("Handling matrices of size N = %u\n", N);
     printf("Using DTree + %u extra bits, max-size %u\n", E, MAX);
     printf("Use Nauty: %u. Swaps-for-free: %u. Polynomial: %u\n", NAUTY, SWAP, POLY);
@@ -301,7 +308,7 @@ int main(int argc, char const *argv[]) {
     }
     if (argc>1 && argv[argc-1][0]!='-') {
         goal = read_matrix(argv[argc-1]);
-        investigate(goal);
+        //investigate(goal);
         assert(goal!=0 && "0-matrix cannot be generated");
     }
     if (goal) {
@@ -311,8 +318,9 @@ int main(int argc, char const *argv[]) {
         int bdepth = m.second.second;
         if (m.first) {
             printf("Found at distance %u (%u + %u)\n", fdepth + bdepth - 2, fdepth-1, bdepth-1);
-            trace concat = trace_back_middle(id, middle, goal, fdepth, bdepth);
-            print_trace(id, goal, concat);
+            byte pi[N];
+            trace concat = trace_back_middle(id, middle, goal, fdepth, bdepth, pi);
+            print_trace(id, goal, concat, pi);
         } else {
             printf("Goal not found after %d steps: \n", fdepth+bdepth-2);
             pretty_matrix(goal);
@@ -324,10 +332,11 @@ int main(int argc, char const *argv[]) {
                 depth = -depth;
                 printf("Goal found at level %d\n", depth-1);
                 trace bfs_trace;
-                matrix other = trace_back(goal, bfs_levels, depth, bfs_trace);
+                byte pi[N];
+                matrix other = trace_back(goal, bfs_levels, depth, bfs_trace, pi);
                 assert(other==id);
                 std::reverse(bfs_trace.begin(), bfs_trace.end());
-                print_trace(other, goal, bfs_trace);
+                print_trace(other, goal, bfs_trace, pi);
             }
             else { // currently unreachable
                 printf("Goal not found after %d steps: \n", depth-1);

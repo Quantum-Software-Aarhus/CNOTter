@@ -43,7 +43,11 @@ matrix read_matrix(std::string filename) {
     return result;
 }
 
-inline matrix permute(matrix x, const byte pi[N]) { // y[i][j] := x[pi[i]][pi[j]]
+// Apply the permutation pi to both rows and columns of x
+// The result y is defined by y[i][j] := x[pi[i]][pi[j]]
+// NOTE: since we permute indices, we actually apply the inverse of pi.
+// This makes a difference when composing permutations.
+inline matrix permute(matrix x, const byte pi[N]) {
     matrix y = 0;
     for (byte i=N-1; i<N; i--)
         for (byte j=N-1; j<N; j--) {
@@ -53,6 +57,46 @@ inline matrix permute(matrix x, const byte pi[N]) { // y[i][j] := x[pi[i]][pi[j]
     return y;
 }
 
+// return the identity permutation in pi
+void id_perm(byte pi[N]) {
+    for (byte i=0; i<N; i++)
+        pi[i] = i;
+}
+
+// return the inverse permutation in pi_inv
+void inv_perm(byte pi[N], byte pi_inv[N]) {
+    for (byte i=0; i<N; i++)
+        pi_inv[pi[i]] = i;
+}
+
+// return the composition pi = pi1 . pi2
+void compose_perm(byte pi1[N], byte pi2[N], byte pi[N]) { // pi = pi1 . pi2
+    for (byte i=0; i<N; i++)
+        pi[i] = pi2[pi1[i]]; // non-standard, since we permute indices
+}
+
+// return the composition pi = pi1^-1 . pi2
+void compose_inv_perm(byte pi1[N], byte pi2[N], byte pi[N]) { // pi = pi1^-1 . pi2
+    for (byte i=0; i<N; i++)
+        pi[pi1[i]] = pi2[i]; // non-standard, since we permute indices
+}
+
+// Apply pi1 to the rows and pi2 to the columns of x
+// Define y by y[i][j] := x[pi1[i]][pi2[j]]
+// NOTE: also here, we permute indices, so we actually apply the inverse of pi1 and pi2
+matrix permute2(matrix x, byte pi1[N], byte pi2[N]) { 
+    matrix y = 0;
+    for (byte i=N-1; i<N; i--)
+        for (byte j=N-1; j<N; j--) {
+            y <<= 1;
+            y |= (x >> (pi1[i]*N + pi2[j])) & 1;
+        }
+    return y;
+}
+
+#if POLY==1 && GOAL==0
+
+// Test if index i is essential (interacts with another index)
 inline bool testEssential(matrix x, byte i) {
     if (!(x & 1UL<<(N+1)*i))
         return true;
@@ -62,10 +106,12 @@ inline bool testEssential(matrix x, byte i) {
     return false;
 }
 
-// Count inessential indices (=isolated vertices in nauty)
+// Count the number of essential indices
 inline byte countEssential(matrix x) {
     byte ess=0;
     for (byte i=0; i<N; i++)
         if (testEssential(x,i)) ess++;
     return ess;
 }
+#endif
+

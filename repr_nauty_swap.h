@@ -11,26 +11,23 @@ void matrix2nauty(const matrix &y, graph g[m*n]) { // now always the same g
     /* 
     We will construct the following bipartite graph:
 
-    ( 0 M )
     ( 0 0 )
+    ( M 0 )
 
     Note: In Nauty the bits start on the left, so we shift WORDSIZE.
     */
     for (byte i=0; i<N; i++) {
-        matrix M_row = ((y >> N*i) & ((1<<N) - 1));
-        g[N-i-1] = M_row << (WORDSIZE-2*N);
+        g[N-i-1] = 0;
     }
     for (byte i=0; i<N; i++) {
-        g[2*N-i-1] = 0;
+        matrix M_row = ((y >> N*i) & ((1<<N) - 1));
+        g[2*N-i-1] = M_row << (WORDSIZE-N);
     }
 
 }
 
-matrix nauty2matrix(const graph* g, int lab[2*N]) {
+matrix nauty2matrix(const graph* g) {
     matrix y=0LL;
-    byte rows[N];
-    byte cols[N];
-    byte r=0,c=0;
 
     /* Assumption: nauty will give back a matrix of the form
         (0  0)
@@ -58,32 +55,44 @@ inline uint64_t representative(matrix &y) {
     matrix2nauty(y,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
     uint64_t mysize = stats.grpsize;
-    y=nauty2matrix(h,lab); // this value is returned
+    y=nauty2matrix(h); // this value is returned
     return fac[N] * fac[N] / mysize;
 }
 
 // return the permutation from x to its representative
-void representativePerm(matrix x, byte pi[N]) {
-    printf("Permutation: Not yet adapted to swap-free\n");
-    exit(-1);
+void representativePerm2(matrix x, byte pi1[N], byte pi2[N]) {
     graph g[m*n];
     graph h[m*n];
     int lab[n], ptn[n], orbits[n];
     statsblk stats;
     matrix2nauty(x,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
-    for (byte i=0; i<N; i++)
-        pi[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-100
-    assert(permute(x, pi) == nauty2matrix(h));
+    matrix y=nauty2matrix(h);
+    for (byte i=0; i<N; i++) {
+        pi2[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-100
+        pi1[N-1-i] = 2*N-1-lab[N+i]; // revert N-1..0 to 0..N-100
+    }
+    assert(permute2(x, pi1, pi2) == y);
+}
+
+// assuming m1 and m2 are equivalent, find sig, tau such that (sig,tau) . m1 = m2
+void equiv_perm(matrix m1, matrix m2, byte sig[N], byte tau[N]) {
+    byte sig1[N], tau1[N], sig2[N], tau2[N];
+    representativePerm2(m1, sig1, tau1);   // repr = (sig1,tau1) . m1
+    representativePerm2(m2, sig2, tau2);   // repr = (sig2,tau2) . m2
+    compose_inv_perm(sig2, sig1, sig);
+    compose_inv_perm(tau2, tau1, tau);
+    assert(permute2(m1, sig1, tau1) == permute2(m2, sig2, tau2)); // both are repr
+    assert(permute2(m1, sig, tau) == m2); 
 }
 
 void investigate(matrix x) {
     printf("Original matrix:\n");
     pretty_matrix(x);
-    byte pi[N];
-    // representativePerm(x,pi);
-    printf("Permutation: skipped\n");
-    // pretty_perm(pi);
+    byte pi1[N], pi2[N];
+    representativePerm2(x, pi1, pi2);
+    printf("rows:\n"); pretty_perm(pi1);
+    printf("cols:\n"); pretty_perm(pi2);
     uint64_t stabilizers = representative(x);
     printf("Canonical matrix:\n");
     pretty_matrix(x);

@@ -63,14 +63,29 @@ do
     esac
 done
 
+if [ $SWAP -eq 1 ] && [ $POLY -eq 1 ]; then
+    echo "Polynomial coefficients switched off: not supported with SWAP"
+    POLY=0
+fi
+
+# Setting compile-time options
+
 exec=matrix_cnot${QUBITS}
 opts="-DN=$QUBITS -DE=$EXTRA -DMAX=$MAX -DPOLY=$POLY -DNAUTY=$NAUTY -DSWAP=$SWAP -DBEAT=$BEAT"
 args="-fopenmp -O3 -DNDEBUG -march=native"
 if [ $NAUTY -eq 1 ]; then
     nauty_args="-Inauty nauty/nautyW1.a -DWORDSIZE=32 -DMAXN=WORDSIZE -Wno-attributes"
 fi
+
+# Setting run-time options
+
 shift $((OPTIND - 1))
 goal=$1
+
+if [ "$goal" != "" ] && [ $POLY -eq 1 ]; then
+    echo "Polynomial coefficients switched off: not supported with GOAL"
+    POLY=0
+fi
 
 \rm -f $exec
 set -x
