@@ -1,9 +1,17 @@
-inline void fingerprint(matrix x, std::array<byte,4> finger[N]) {
-    // fingerprint:
+#ifndef REPR_H
+#define REPR_H
+
+#include <algorithm>
+#include "matrix.h"
+
+typedef std::array<byte,4> finger_t;
+    // Fingerprint of an index i:
     // 0: NEGATION of diagonal [i][i]
     // 1: sum of row [i]
     // 2: sum of column [i]
     // 3: store diagonal i  // this is only used locally to sort the matrix
+
+inline void fingerprint(matrix x, finger_t finger[N]) {
     for (byte i=0; i<N; i++) {
         finger[i][0] = 1;
         finger[i][1] = 0;
@@ -21,7 +29,7 @@ inline void fingerprint(matrix x, std::array<byte,4> finger[N]) {
 }           }   }
 
 // compute and sort the finger-print, return the normalized matrix and permutation
-inline matrix normalize(matrix x, std::array<byte,4> finger[N], byte pi[N]) {
+inline matrix normalize(matrix x, finger_t finger[N], perm pi) {
     fingerprint(x, finger);
     std::sort(finger, finger+N);
     for (byte i=0; i<N; i++) pi[i] = finger[i][3];
@@ -38,8 +46,8 @@ inline bool next_cycle_perm(const byte cycles[], byte list[]) {
 
 // This function normalizes y, initializes cycles, and returns the first essential index
 inline byte compute_cycles(byte cycles[], matrix &y) {
-    std::array<byte,4> finger[N]; // finger print
-    byte pi[N];
+    finger_t finger[N]; // finger print
+    perm pi;
     y = normalize(y, finger, pi); // this also initializes fingerprint and pi
 
     // skip and count inessential indices
@@ -68,8 +76,7 @@ inline byte compute_cycles(byte cycles[], matrix &y) {
 // Update y to the smallest representative
 // Return the number of "essential" stabilizers
 inline uint64_t explore_orbit(matrix &y, byte cycles[], byte essential) {
-    byte pi[N];
-    for (byte i=0; i<N; i++) pi[i] = i; // initialize permutation
+    perm pi; id_perm(pi);
 
     // traverse all nested permutations (orbit) and count stabilizers
     uint64_t stabilizers = 1; // the id is surely a stabilizer
@@ -94,13 +101,13 @@ inline uint64_t representative(matrix &y) {
 }
 
 // return the permutation from x to its representative
-void representativePerm(matrix x, byte pi[N]) {
-    std::array<byte,4> finger[N]; // finger print
-    byte pi1[N];                  // permutation from x to y
+void representativePerm(matrix x, perm pi) {
+    finger_t finger[N]; // finger print
+    perm pi1;                     // permutation from x to y
     matrix y = normalize(x, finger, pi1);
 
     // Similar to representative
-    byte pi2[N];                  // permutation from y to smallest
+    perm pi2;                     // permutation from y to smallest
     for (byte i=0; i<N; i++) 
         pi[i] = pi2[i] = i;       // initialize "running" permutation pi
     byte cycles[N+1];             // cycles for permutation
@@ -113,8 +120,7 @@ void representativePerm(matrix x, byte pi[N]) {
             for (byte i=0; i<N; i++) pi2[i]=pi[i];
         }
     }
-    for (byte i=0; i<N; i++)
-        pi[i]= pi1[pi2[i]];       // Compose pi1 and pi2, return pi
+    compose_perm(pi2, pi1, pi);
     assert(permute(x, pi) == smallest);
 }
 
@@ -132,7 +138,7 @@ inline byte countEss(const matrix &x) {
     return N;
 }
 
-void pretty_finger(std::array<byte,4> finger[N]) {
+void pretty_finger(finger_t finger[N]) {
     for (byte i=0; i<N; i++)
         printf("(%u,%u,%u) ",finger[i][0], finger[i][1], finger[i][2]);
     printf("\n");
@@ -156,8 +162,8 @@ void pretty_cycles(byte essential, byte cycles[N+1]) {
 void investigate(matrix x) {
     printf("Original matrix:\n");
     pretty_matrix(x);
-    std::array<byte,4> finger[N];
-    byte pi[N];
+    finger_t finger[N];
+    perm pi;
     byte cycles[N+1];
     fingerprint(x,finger);
     printf("Original Fingerprint: ");
@@ -181,3 +187,5 @@ void investigate(matrix x) {
     assert(permute(x,pi)==y);
     printf("Represents %lu matrices.\n\n", orbits);
 }
+
+#endif

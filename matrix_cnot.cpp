@@ -8,66 +8,18 @@
 
 #include <array>
 #include <vector>
-#include "hashset.h"
-#include <algorithm>
-#include <iostream>
 #include <omp.h>
-#include <assert.h>
-
-#ifndef N 
-#define N 6 // Number of qubits, can be at most 8, set with -DN=7
-#endif
-
-#ifndef E 
-#define E 1 // extra bits added to log of hash table size, set with -DE=2
-#endif
-
-#ifndef MAX
-#define MAX 34 // maximum allocated table, set with -DMAX=36
-#endif
-
-#ifndef SWAP
-#define SWAP 0 // SWAPS for free, enable with -DSWAP=1
-#endif
-
-#if SWAP==1
-#define NAUTY 1  // SWAP requires Nauty
-#define POLY 0  // SWAP is incompatible with POLY
-#endif
-
-#ifndef NAUTY
-#define NAUTY 1 // using Nauty instead of permutations, disable with -DNAUTY=0
-#endif
-
-#ifndef POLY
-#define POLY 0 // compute polynomial coefficients, enable with -DPOLY=1
-#endif
-
-#ifndef BEAT
-#define BEAT 0 // frequency of lifebeat in seconds (0 if no lifebeat), set with -DBEAT=60
-#endif
-
-const uint64_t fac[] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320};
-
+#include "hashset.h" // thread-safe hash set from dtree project
+#include "options.h" // defines N,E,MAX,SWAP,NAUTY,POLY,BEAT, see also matrix_cnot.sh
 #include "timing.h"
 #include "matrix.h"
+#include "repr.h"
+#include "trace_back.h"
 
-/* precalculated 2-log of the orbit level sizes (0-terminated) */
+// precalculated 2-log of the orbit level sizes (0-terminated)
+// NOTE: the size depends on if SWAPs are free or not
 
-#if SWAP==1
-const std::array<std::vector<byte>,9> levelSizes = {{
-    // first number is for level depth=2 (externally: Depth=1)
-    {}, //0
-    {0}, // 1
-    {0,0,0,0}, // 2
-    {0,3,4,4,3,0,0}, // 3
-    {0,3,5,5,3,0,0,0,0,0}, // 4
-    {0,3,5,7,9,9,7,3,0,0,0,0,0}, // 5
-    {0,3,5,8,10,13,14,15,13,10,3,0,0,0,0,0}, //6
-    {0,3,5,8,11,14,16,19,21,22,22,20,13,2,0,0,0,0,0}, //7
-    {0,3,5,8,11,14,17,20,23,26,28,30,31,30,28,21,3,0,0,0,0,0} //8
-}};
-#else
+#if SWAP==0
 const std::array<std::vector<byte>,9> levelSizes = {{
     // first number is for level depth=2 (externally: Depth=1)
     {}, //0
@@ -80,30 +32,28 @@ const std::array<std::vector<byte>,9> levelSizes = {{
     {0,3,6,8,11,15,18,21,24,27,30,32,33,34,33,29,17,0,0}, //7
     {0,3,6,8,11,15,18,22,25,29,32,34 /* +1 */, /* guess */ 37,38,40,41,40,38,36,34,0,0} //8
 }};
+#else
+const std::array<std::vector<byte>,9> levelSizes = {{
+    // first number is for level depth=2 (externally: Depth=1)
+    {}, //0
+    {0}, // 1
+    {0,0,0,0}, // 2
+    {0,3,4,4,3,0,0}, // 3
+    {0,3,5,5,3,0,0,0,0,0}, // 4
+    {0,3,5,7,9,9,7,3,0,0,0,0,0}, // 5
+    {0,3,5,8,10,13,14,15,13,10,3,0,0,0,0,0}, //6
+    {0,3,5,8,11,14,16,19,21,22,22,20,13,2,0,0,0,0,0}, //7
+    {0,3,5,8,11,14,17,20,23,26,28,30,31,30,28,21,3,0,0,0,0,0} //8
+}};
 #endif
 
 #if POLY==1
 std::array<std::atomic<uint64_t>,N+1>poly; // coefficients of the polynomial at distance N/2
 #endif
 
-using hashset = HashSet<uint64_t, Linear, MurmurHash>;
-hashset bfs_levels[3*N];
-
-hashset bfs_fwd[(3*N+2)/2];
+hashset bfs_levels[3*N];    // for one-directional BFS
+hashset bfs_fwd[(3*N+2)/2]; // for bi-directional BFS
 hashset bfs_bwd[(3*N+1)/2];
-
-#if SWAP==1
-#include "repr_nauty_swap.h"
-#elif NAUTY==1
-#include "repr_nauty.h"
-#else
-#include "repr_perm.h"
-#endif
-
-inline bool find_level(matrix m, hashset &level) {
-    representative(m);
-    return level.contains(m);
-}
 
 void Add(const matrix &x, byte i, byte j, 
                 hashset *prev, hashset *current, hashset *next, int depth,
@@ -269,8 +219,6 @@ triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], h
     return Triple(0, fdepth, bdepth);
 }
 
-#include "trace_back.h"
-
 /*
  * Main: if first arg is -K, set K as limit. If last argument is not -*, set as goal
  */
@@ -318,8 +266,8 @@ int main(int argc, char const *argv[]) {
         int bdepth = m.second.second;
         if (m.first) {
             printf("Found at distance %u (%u + %u)\n", fdepth + bdepth - 2, fdepth-1, bdepth-1);
-            byte pi[N];
-            trace concat = trace_back_middle(id, middle, goal, fdepth, bdepth, pi);
+            perm pi;
+            trace concat = trace_back_middle(id, middle, goal, bfs_fwd, bfs_bwd, fdepth, bdepth, pi);
             print_trace(id, goal, concat, pi);
         } else {
             printf("Goal not found after %d steps: \n", fdepth+bdepth-2);
@@ -332,10 +280,10 @@ int main(int argc, char const *argv[]) {
                 depth = -depth;
                 printf("Goal found at level %d\n", depth-1);
                 trace bfs_trace;
-                byte pi[N];
-                matrix other = trace_back(goal, bfs_levels, depth, bfs_trace, pi);
+                matrix other = trace_back(goal, bfs_levels, depth, bfs_trace);
                 assert(other==id);
                 std::reverse(bfs_trace.begin(), bfs_trace.end());
+                perm pi; id_perm(pi);
                 print_trace(other, goal, bfs_trace, pi);
             }
             else { // currently unreachable

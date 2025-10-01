@@ -1,5 +1,9 @@
+#ifndef REPR_H
+#define REPR_H
+
 #include "nauty.h"
 #include "nautinv.h"
+#include "matrix.h"
 
 const byte m=1; // nauty
 const byte n=N; // 
@@ -44,7 +48,7 @@ inline uint64_t representative(matrix &y) {
 }
 
 // return the permutation from x to its representative
-void representativePerm(matrix x, byte pi[N]) {
+void representativePerm(matrix x, perm pi) {
     graph g[m*n];
     graph h[m*n];
     int lab[n], ptn[n], orbits[n];
@@ -59,7 +63,7 @@ void representativePerm(matrix x, byte pi[N]) {
 void investigate(matrix x) {
     printf("Original matrix:\n");
     pretty_matrix(x);
-    byte pi[N];
+    perm pi;
     representativePerm(x,pi);
     printf("Permutation:\n");
     pretty_perm(pi);
@@ -68,3 +72,5 @@ void investigate(matrix x) {
     pretty_matrix(x);
     printf("Represents %lu matrices.\n\n",orbit);
 }
+
+#endif

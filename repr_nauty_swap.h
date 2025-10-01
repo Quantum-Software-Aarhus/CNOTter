@@ -1,5 +1,9 @@
+#ifndef REPR_H
+#define REPR_H
+
 #include "nauty.h"
 #include "nautinv.h"
+#include "matrix.h"
 
 const byte m=1; // nauty
 const byte n=2*N; // 
@@ -18,12 +22,9 @@ void matrix2nauty(const matrix &y, graph g[m*n]) { // now always the same g
     */
     for (byte i=0; i<N; i++) {
         g[N-i-1] = 0;
-    }
-    for (byte i=0; i<N; i++) {
         matrix M_row = ((y >> N*i) & ((1<<N) - 1));
         g[2*N-i-1] = M_row << (WORDSIZE-N);
     }
-
 }
 
 matrix nauty2matrix(const graph* g) {
@@ -60,7 +61,7 @@ inline uint64_t representative(matrix &y) {
 }
 
 // return the permutation from x to its representative
-void representativePerm2(matrix x, byte pi1[N], byte pi2[N]) {
+void representativePerm2(matrix x, perm pi1, perm pi2) {
     graph g[m*n];
     graph h[m*n];
     int lab[n], ptn[n], orbits[n];
@@ -76,8 +77,8 @@ void representativePerm2(matrix x, byte pi1[N], byte pi2[N]) {
 }
 
 // assuming m1 and m2 are equivalent, find sig, tau such that (sig,tau) . m1 = m2
-void equiv_perm(matrix m1, matrix m2, byte sig[N], byte tau[N]) {
-    byte sig1[N], tau1[N], sig2[N], tau2[N];
+void equiv_perm2(matrix m1, matrix m2, perm sig, perm tau) {
+    perm sig1, tau1, sig2, tau2;
     representativePerm2(m1, sig1, tau1);   // repr = (sig1,tau1) . m1
     representativePerm2(m2, sig2, tau2);   // repr = (sig2,tau2) . m2
     compose_inv_perm(sig2, sig1, sig);
@@ -89,7 +90,7 @@ void equiv_perm(matrix m1, matrix m2, byte sig[N], byte tau[N]) {
 void investigate(matrix x) {
     printf("Original matrix:\n");
     pretty_matrix(x);
-    byte pi1[N], pi2[N];
+    perm pi1, pi2;
     representativePerm2(x, pi1, pi2);
     printf("rows:\n"); pretty_perm(pi1);
     printf("cols:\n"); pretty_perm(pi2);
@@ -98,3 +99,5 @@ void investigate(matrix x) {
     pretty_matrix(x);
     printf("Represents %lu matrices.\n\n",stabilizers);
 }
+
+#endif

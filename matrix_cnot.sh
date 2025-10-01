@@ -68,13 +68,18 @@ if [ $SWAP -eq 1 ] && [ $POLY -eq 1 ]; then
     POLY=0
 fi
 
+if [ $SWAP -eq 1 ] && [ $NAUTY -eq 0 ]; then
+    echo "Nauty switched on: SWAP is only supported with Nauty"
+    NAUTY=1
+fi
+
 # Setting compile-time options
 
 exec=matrix_cnot${QUBITS}
 opts="-DN=$QUBITS -DE=$EXTRA -DMAX=$MAX -DPOLY=$POLY -DNAUTY=$NAUTY -DSWAP=$SWAP -DBEAT=$BEAT"
-args="-fopenmp -O3 -DNDEBUG -march=native"
+args="-fopenmp -O3 -DNDEBUG -march=native -std=c++17"
 if [ $NAUTY -eq 1 ]; then
-    nauty_args="-Inauty nauty/nautyW1.a -DWORDSIZE=32 -DMAXN=WORDSIZE -Wno-attributes"
+    nauty_args="-I./nauty nauty/nautyW1.a -DWORDSIZE=32 -DMAXN=WORDSIZE"
 fi
 
 # Setting run-time options
