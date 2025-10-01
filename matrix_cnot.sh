@@ -57,8 +57,8 @@ do
            echo "  goal       : filename for Goal matrix (see 'Inputs/' for examples)"
            echo
            echo "Note: all options are compile-time options, except for dist and goal."
-           echo "Compiles a binary \"./matrix_cnot<QUBITS>\" and runs it."
-           echo "Use ./matrix_cnot<Q> -<dist> goal" to rerun with different goal/distance
+           echo "Compiles a binary \"./matrix_cnot<Q>.exe\" and runs it."
+           echo "Use ./matrix_cnot<Q>.exe -<dist> goal" to rerun with different goal/distance
            exit 0;;
     esac
 done
@@ -75,7 +75,7 @@ fi
 
 # Setting compile-time options
 
-exec=matrix_cnot${QUBITS}
+exec=matrix_cnot${QUBITS}.exe
 opts="-DN=$QUBITS -DE=$EXTRA -DMAX=$MAX -DPOLY=$POLY -DNAUTY=$NAUTY -DSWAP=$SWAP -DBEAT=$BEAT"
 args="-fopenmp -O3 -DNDEBUG -march=native -std=c++17"
 if [ $NAUTY -eq 1 ]; then
@@ -94,5 +94,5 @@ fi
 
 \rm -f $exec
 set -x
-g++ -o $exec matrix_cnot.cpp $opts $args $nauty_args
+g++ -o $exec src/matrix_cnot.cpp $opts $args $nauty_args
 ./$exec -$DIST $goal | tee matrix_cnot$QUBITS.txt

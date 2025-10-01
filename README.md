@@ -33,10 +33,10 @@ Run-time Options:
 ```
 
 Note: all options are compile-time options, except for Dist and Goal.
-Compiles a binary `./matrix_cnot<Q>` (where Q=QUBITS) and runs it.
+Compiles a binary `./matrix_cnot<Q>.exe` (where Q=QUBITS) and runs it.
 To rerun with the same Q on a different goal/distance, use 
 
-    ./matrix_cnot<Q> -<dist> <goal>
+    ./matrix_cnot<Q>.exe -<dist> <goal>
 
 ## Examples
 
@@ -78,7 +78,7 @@ Found at distance 15 (9 + 6)
 
 Synthesize circuit for the inverse matrix on (again) 6 Qubits:
 ```
-    ./matrix_cnot6 Inputs/inverse6.txt
+    ./matrix_cnot6.exe Inputs/inverse6.txt
 ```
 Found at distance 13 (7 + 6)  
 **NOTE:** The binary could only be reused because other options didn't change.

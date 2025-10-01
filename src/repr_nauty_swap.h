@@ -39,7 +39,7 @@ matrix nauty2matrix(const graph* g) {
 
     for (byte i=N; i<2*N; i++) {
         if (g[i] == 0) {
-            printf("assumption on Nauty failed\n");
+            printf("\nProblem: Assumption on Nauty failed (maybe input was not full-rank?)\n");
             exit(-1);
         }
         matrix row = g[2*N-(i-N)-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
