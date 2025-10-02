@@ -30,7 +30,7 @@ const uint64_t fac[] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320};
 #endif
 
 #ifndef NAUTY
-#define NAUTY 1 // using Nauty instead of permutations, disable with -DNAUTY=0
+#define NAUTY 0 // using Nauty instead of permutations, disable with -DNAUTY=0
 #endif
 
 #ifndef POLY

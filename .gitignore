@@ -1,5 +1,7 @@
-matrix_cnot?.exe
-matrix_cnot?.txt
+/matrix_cnot?.exe
+/matrix_cnot?.txt
+
+slurm*.out
 
 # Nauty:
 nauty/.libs/

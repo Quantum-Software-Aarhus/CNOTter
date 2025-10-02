@@ -19,7 +19,7 @@
 # Defaults:
 
 QUBITS=6    # Number of Qubits
-NAUTY=1     # using Nauty
+NAUTY=0     # using Nauty
 EXTRA=1     # size of hash-tables for levels + EXTRA bits
 DIST=-1     # maximum distance to try (-1 is unlimited)
 POLY=0      # Compute polynomial coefficients
