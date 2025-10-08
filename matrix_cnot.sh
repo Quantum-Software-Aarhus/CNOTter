@@ -3,6 +3,7 @@
 #SBATCH --partition=q128
 #SBATCH --mem=750GB
 #SBATCH --time=2-00:00
+#SBATCH --cpus-per-task=128
 
 ##SBATCH --qos=qosqfat
 ##SBATCH --partition=qfat
@@ -11,7 +12,6 @@
 
 #SBATCH --job-name=Matrix-CNOT
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=128
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaco@cs.au.dk
 #SBATCH --exclusive
