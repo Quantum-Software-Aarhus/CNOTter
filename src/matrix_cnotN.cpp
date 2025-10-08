@@ -12,7 +12,7 @@
 #include "options.h" // defines N,E,MAX,SWAP,NAUTY,POLY,BEAT, see also matrix_cnot.sh
 #include "timing.h"
 #include "matrixN.h"
-#include "repr.h"
+#include "repr_nautyN.h" // TODO: other reprs
 #include "trace_back.h"
 #include "hashset.h" // thread-safe hash set from dtree project
 #include "tree.h"
@@ -57,14 +57,13 @@ rootset bfs_levels[3*N];    // for one-directional BFS
 rootset bfs_fwd[(3*N+2)/2]; // for bi-directional BFS
 rootset bfs_bwd[(3*N+1)/2];
 
-void Add(const matrix &x, byte i, byte j, 
-                rootset *prev, rootset *current, rootset *next, int depth,
+void Add(const Matrix &x, byte i, byte j, 
+                rootset &prev, rootset &current, rootset &next, int depth,
                 uint64_t &level, uint64_t &count) {
-    uint64_t mask = (1UL<<N*(i+1)) - (1UL<<N*i);
-    uint64_t row = (x & mask) >> i*N;
-    matrix y = x ^ (row << j*N);
+    Matrix y = x.addrow(i,j);
     uint64_t Orbit = representative(y);
-    if (!prev->contains(y) && !current->contains(y) && next->insert(y)) {
+    uint64_t s = INSERT(x,next);
+    if (!CONTAINS(y,prev) && !CONTAINS(y,current) && INSERT(y,next)) {
         // only insert and count if new; 
         level += Orbit;
         count++;
@@ -77,13 +76,13 @@ void Add(const matrix &x, byte i, byte j,
     }
 }
 
-uint64_t init_level(hashset levels[], matrix start) {
+uint64_t init_level(hashset levels[], Matrix &start) {
     levels[0] = hashset(); // level 0 (prev)
     levels[0].init(3);
     levels[1] = hashset(); // level 1 (current)
     levels[1].init(3);
     uint64_t Orbit = representative(start); // modifies start
-    levels[1].insert(start);
+    INSERT(start,levels[1]);
     return Orbit;
 }
 
@@ -100,7 +99,8 @@ uint64_t next_level(uint64_t &size, hashset levels[], uint32_t depth) {
     auto next = &levels[depth];
 
     current->parallelForAll(
-        [&](matrix x){
+        [&](uint64_t r){
+            Matrix x = GET(r);
             uint64_t loc_level=0, loc_count=0;
             for (byte i=0; i<N; i++)
                 for (byte j=0; j<N; j++) // add to row j

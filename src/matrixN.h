@@ -10,6 +10,44 @@
 #define NC (64 / N)        // Columns: number of rows in a single word.
 #define NR ((N-1) / NC +1) // Rows: number of words needed (last word may not be filled)
 
+typedef uint8_t byte;
+
+// TODO: move to permutation.h
+
+typedef byte perm[N];       // permutation of N elements
+
+void pretty_perm(const perm pi) {
+    for (byte i=0; i<N; i++)
+        printf("%3u", i);
+    printf("\n");
+    for (byte i=0; i<N; i++)
+        printf("%3u", pi[i]);
+    printf("\n");
+}
+
+// return the identity permutation in pi
+inline void id_perm(perm pi) {
+    for (byte i=0; i<N; i++)
+        pi[i] = i;
+}
+
+// return the inverse permutation in pi_inv
+inline void inv_perm(const perm pi, perm pi_inv) {
+    for (byte i=0; i<N; i++)
+        pi_inv[pi[i]] = i;
+}
+
+// return the composition pi = pi1 . pi2
+inline void compose_perm(const perm pi1, const perm pi2, perm pi) {
+    for (byte i=0; i<N; i++)
+        pi[i] = pi2[pi1[i]]; // non-standard, since we permute indices
+}
+
+// return the composition pi = pi1^-1 . pi2
+inline void compose_inv_perm(const perm pi1, const perm pi2, perm pi) {
+    for (byte i=0; i<N; i++)
+        pi[pi1[i]] = pi2[i]; // non-standard, since we permute indices
+}
 
 class Matrix {
 
