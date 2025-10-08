@@ -13,7 +13,7 @@
 #include "timing.h"
 #include "matrixN.h"
 #include "repr_nautyN.h" // TODO: other reprs
-#include "trace_back.h"
+#include "trace_backN.h"
 #include "hashset.h" // thread-safe hash set from dtree project
 #include "tree.h"
 
@@ -49,7 +49,7 @@ const std::array<std::vector<byte>,9> levelSizes = {{
 #endif
 
 #if POLY==1
-std::array<std::atomic<uint64_t>,N+1>poly; // coefficients of the polynomial at distance N/2
+std::array<std::atomic<counter>,N+1>poly; // coefficients of the polynomial at distance N/2
 #endif
 
 
@@ -58,12 +58,11 @@ rootset bfs_fwd[(3*N+2)/2]; // for bi-directional BFS
 rootset bfs_bwd[(3*N+1)/2];
 
 void Add(const Matrix &x, byte i, byte j, 
-                rootset &prev, rootset &current, rootset &next, int depth,
-                uint64_t &level, uint64_t &count) {
+                rootset *prev, rootset *current, rootset *next, int depth,
+                counter &level, counter &count) {
     Matrix y = x.addrow(i,j);
-    uint64_t Orbit = representative(y);
-    uint64_t s = INSERT(x,next);
-    if (!CONTAINS(y,prev) && !CONTAINS(y,current) && INSERT(y,next)) {
+    counter Orbit = representative(y);
+    if (!CONTAINS(y,*prev) && !CONTAINS(y,*current) && INSERT(y,*next)) {
         // only insert and count if new; 
         level += Orbit;
         count++;
@@ -76,20 +75,20 @@ void Add(const Matrix &x, byte i, byte j,
     }
 }
 
-uint64_t init_level(hashset levels[], Matrix &start) {
+counter init_level(hashset levels[], Matrix &start) {
     levels[0] = hashset(); // level 0 (prev)
     levels[0].init(3);
     levels[1] = hashset(); // level 1 (current)
     levels[1].init(3);
-    uint64_t Orbit = representative(start); // modifies start
+    counter Orbit = representative(start); // modifies start
     INSERT(start,levels[1]);
     return Orbit;
 }
 
 // explore and count all successors of the current level
-uint64_t next_level(uint64_t &size, hashset levels[], uint32_t depth) { 
-    std::atomic<uint64_t> level(0);
-    std::atomic<uint64_t> count(0);
+counter next_level(counter &size, hashset levels[], uint32_t depth) { 
+    std::atomic<mat_idx> level(0);
+    std::atomic<mat_idx> count(0);
 
     // current and prev are accessed read-only
     // next is modified (extended) concurrently
@@ -99,9 +98,9 @@ uint64_t next_level(uint64_t &size, hashset levels[], uint32_t depth) {
     auto next = &levels[depth];
 
     current->parallelForAll(
-        [&](uint64_t r){
+        [&](mat_idx r){
             Matrix x = GET(r);
-            uint64_t loc_level=0, loc_count=0;
+            counter loc_level=0, loc_count=0;
             for (byte i=0; i<N; i++)
                 for (byte j=0; j<N; j++) // add to row j
                     if (i != j) Add(x, i, j, prev, current, next, depth, loc_level, loc_count);
@@ -124,11 +123,11 @@ uint64_t next_level(uint64_t &size, hashset levels[], uint32_t depth) {
     return level;
 }
 
-int generate_bfs(matrix start, matrix goal, byte limit, hashset bfs_levels[]) {
+int generate_bfs(Matrix start, Matrix goal, byte limit, hashset bfs_levels[]) {
 
     // initialize Breadth-First Search
     byte depth = 1, tableSize = 3;
-    uint64_t level, levels, orbit, orbits;
+    counter level, levels, orbit, orbits;
     orbit = orbits = 1;
 
     printf("Depth 0 (2^3): "); fflush(stdout);
@@ -136,7 +135,7 @@ int generate_bfs(matrix start, matrix goal, byte limit, hashset bfs_levels[]) {
 
     while (orbit) {
         report(level, orbit);
-        if (goal)
+        if (!(goal==Matrix(false))) // TODO: define neq
             { if (find_level(goal, bfs_levels[depth])) return -depth; }
         else 
             { if (depth > 1) bfs_levels[depth-2].deinit(); }
@@ -160,9 +159,9 @@ int generate_bfs(matrix start, matrix goal, byte limit, hashset bfs_levels[]) {
     return depth;
 }
 
-matrix intersect(hashset &L1, hashset &L2) {
-    std::atomic<matrix> joint(0);
-    L1.parallelForAll([&](matrix x){
+mat_idx intersect(hashset &L1, hashset &L2) {
+    std::atomic<mat_idx> joint(0);
+    L1.parallelForAll([&](mat_idx x){
         if (L2.contains(x)) joint=x; // How to terminate when found?
     });
     return joint;
@@ -172,22 +171,22 @@ matrix intersect(hashset &L1, hashset &L2) {
 // We also return the depths of the fwd and bwd search (fdepth,bdepth)
 // We return (0,fdepth,bdepth) if start and goal are not connected
 
-using triple = std::pair<matrix,std::pair<byte,byte>>;
-inline triple Triple(matrix m, byte d1, byte d2) {
-    return std::pair<matrix,std::pair<byte,byte>>(m, std::pair<byte,byte>(d1, d2));
+using triple = std::pair<mat_idx,std::pair<byte,byte>>;
+inline triple Triple(mat_idx m, byte d1, byte d2) {
+    return std::pair<mat_idx,std::pair<byte,byte>>(m, std::pair<byte,byte>(d1, d2));
 }
 
-triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], hashset bfs_bwd[]) {
+triple bidirectional(Matrix start, Matrix goal, byte limit, hashset bfs_fwd[], hashset bfs_bwd[]) {
 
     // initialize Bidirectional fwd/bwd Search
     byte fdepth = 1, bdepth=1, tableSize;
-    uint64_t level, forbit, borbit, levels, orbits;
+    counter level, forbit, borbit, levels, orbits;
     forbit = borbit = 1; orbits = 2;
     levels = level = init_level(bfs_fwd, start);
     printf("Fwd Depth 0 (2^3): "); report(level, forbit);
     levels += level = init_level(bfs_bwd, goal);
     printf("Bwd Depth 0 (2^3): "); report(level, borbit);
-    matrix m = intersect(bfs_fwd[fdepth], bfs_bwd[bdepth]);
+    mat_idx m = intersect(bfs_fwd[fdepth], bfs_bwd[bdepth]);
     if (m) return Triple(m, fdepth, bdepth);
 
     while (fdepth + bdepth - 2 < 3*(N-1)) { // expand the smallest level
@@ -246,9 +245,12 @@ int main(int argc, char const *argv[]) {
         printf("Running with %d OpenMP threads\n",omp_get_max_threads());
     #endif
 
-    matrix id=1; // compute identity matrix
-    for (byte i=1; i<N; i++) id = (id << (N+1)) | 1;
-    matrix goal=0; // search for goal: set with last argument "filename"
+    leaves.init(PairSize);
+    intermediate.init(PairSize);
+
+    Matrix id(1);
+    Matrix goal(0);
+
     byte  limit=-1; // search limit when >=0: set with argument "-<limit>"
 
     if (argc>1 && argv[1][0]=='-') {
@@ -257,13 +259,12 @@ int main(int argc, char const *argv[]) {
             printf("Cutting off at maximum distance: %d\n", limit);
     }
     if (argc>1 && argv[argc-1][0]!='-') {
-        goal = read_matrix(argv[argc-1]);
+        Matrix Goal = Matrix::read(argv[argc-1]);
         //investigate(goal);
-        assert(goal!=0 && "0-matrix cannot be generated");
     }
-    if (goal) {
+    if (!(goal==Matrix(false))) {
         triple m = bidirectional(id, goal, limit, bfs_fwd, bfs_bwd);
-        matrix middle = m.first;
+        mat_idx middle = m.first;
         int fdepth = m.second.first;
         int bdepth = m.second.second;
         if (m.first) {
@@ -273,16 +274,16 @@ int main(int argc, char const *argv[]) {
             print_trace(id, goal, concat, pi);
         } else {
             printf("Goal not found after %d steps: \n", fdepth+bdepth-2);
-            pretty_matrix(goal);
+            goal.print();
         }
     } else {
         int depth = generate_bfs(id, goal, limit, bfs_levels); 
-        if (goal) { // currently unreachable, since bidirectional is preferred
+        if (!(goal==Matrix(0))) { // currently unreachable, since bidirectional is preferred
             if (depth < 0) { // negative means goal is found 
                 depth = -depth;
                 printf("Goal found at level %d\n", depth-1);
                 trace bfs_trace;
-                matrix other = trace_back(goal, bfs_levels, depth, bfs_trace);
+                Matrix other = trace_back(goal, bfs_levels, depth, bfs_trace);
                 assert(other==id);
                 std::reverse(bfs_trace.begin(), bfs_trace.end());
                 perm pi; id_perm(pi);
@@ -290,7 +291,7 @@ int main(int argc, char const *argv[]) {
             }
             else { // currently unreachable
                 printf("Goal not found after %d steps: \n", depth-1);
-                pretty_matrix(goal);
+                goal.print();
             }
         }
 #if POLY==1

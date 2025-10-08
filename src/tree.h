@@ -11,6 +11,7 @@ using leafset = HashSet<uint32_t, Linear, MurmurHash>;
 
 pairset intermediate;
 leafset leaves;
+constexpr int PairSize=32;
 
 // We need to fold NR leaves (uint64_t) into one uint64_t root
 // We build a tree as follows:

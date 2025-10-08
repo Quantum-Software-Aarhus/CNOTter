@@ -1,20 +1,21 @@
+#ifndef MATRIXN_H
+#define MATRIXN_H
 #include "options.h"
 
-#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <array>
 
-
-#define N 18
 #define NC (64 / N)        // Columns: number of rows in a single word.
 #define NR ((N-1) / NC +1) // Rows: number of words needed (last word may not be filled)
 
-typedef uint8_t byte;
+using byte = uint8_t;
+using mat_idx = uint64_t;
+using counter = uint64_t;
 
 // TODO: move to permutation.h
 
-typedef byte perm[N];       // permutation of N elements
+using perm = byte[N];       // permutation of N elements
 
 void pretty_perm(const perm pi) {
     for (byte i=0; i<N; i++)
@@ -146,3 +147,4 @@ public:
     }
 
 };
+#endif

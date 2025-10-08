@@ -36,14 +36,14 @@ Matrix nauty2matrix(const graph* g) {
     return y;
 }
 
-inline uint64_t representative(Matrix &y) {
+inline counter representative(Matrix &y) {
     graph g[m*n];
     graph h[m*n];
     int lab[n], ptn[n], orbits[n];
     statsblk stats;
     matrix2nauty(y,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
-    uint64_t mysize = stats.grpsize;
+    counter mysize = stats.grpsize;
     // if (stats.grpsize2) {printf("Large group!\n"); exit(-1); }
     y=nauty2matrix(h); // this value is returned
     return fac[N] / mysize;
@@ -70,7 +70,7 @@ void investigate(const Matrix &x) {
     representativePerm(y,pi);
     printf("Permutation:\n");
     pretty_perm(pi);
-    uint64_t orbit = representative(y);
+    counter orbit = representative(y);
     printf("Canonical matrix:\n");
     y.print();
     printf("Represents %lu matrices.\n\n",orbit);

@@ -17,7 +17,7 @@ inline bool find_level(Matrix &m, hashset &level) {
 Matrix step_back(Matrix x, hashset &level, trace &tr) {
     uint64_t mask = (1 << N) - 1; // to select row i
     for (byte i=0; i<N; i++) {
-        for (byte j=0; j<N; j++, row <<= N) // add to row j
+        for (byte j=0; j<N; j++) // add to row j
             if (i != j) {
                 Matrix prev = x.addrow(i,j);
                 if (find_level(prev, level)) {
