@@ -2,7 +2,9 @@
 #define TRACE_BACK_H
 
 #include "matrix.h"
+#include "repr.h"
 #include "hashset.h"
+#include <vector>
 
 using trace = std::vector<std::pair<byte,byte>>;
 using hashset = HashSet<uint64_t, Linear, MurmurHash>;

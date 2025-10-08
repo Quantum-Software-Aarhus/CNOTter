@@ -1,6 +1,7 @@
 #ifndef REPR_H
 #define REPR_H
 
+#include "options.h"
 #include "nauty.h"
 #include "nautinv.h"
 #include "matrix.h"

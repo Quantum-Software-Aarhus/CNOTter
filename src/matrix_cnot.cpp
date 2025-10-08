@@ -55,9 +55,9 @@ hashset bfs_levels[3*N];    // for one-directional BFS
 hashset bfs_fwd[(3*N+2)/2]; // for bi-directional BFS
 hashset bfs_bwd[(3*N+1)/2];
 
-void Add(const matrix &x, byte i, byte j, 
-                hashset *prev, hashset *current, hashset *next, int depth,
-                uint64_t &level, uint64_t &count) {
+void Add(matrix x, byte i, byte j, 
+            hashset *prev, hashset *current, hashset *next, int depth,
+            uint64_t &level, uint64_t &count) {
     uint64_t mask = (1UL<<N*(i+1)) - (1UL<<N*i);
     uint64_t row = (x & mask) >> i*N;
     matrix y = x ^ (row << j*N);

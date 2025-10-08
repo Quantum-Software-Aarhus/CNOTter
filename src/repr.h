@@ -1,3 +1,6 @@
+#ifndef REPRwrap_H
+#define REPRwrap_H
+
 #if SWAP==1
 #include "repr_nauty_swap.h"
 #elif NAUTY==1
@@ -16,6 +19,6 @@ void equiv_perm(matrix m1, matrix m2, perm pi) {
     assert(permute(m1, pi1) == permute(m2, pi2)); // both are repr
     assert(permute(m1, pi) == m2);  // pi . m1 = m2
 }
-#else
+#endif
 
 #endif
