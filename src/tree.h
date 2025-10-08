@@ -1,3 +1,6 @@
+#ifndef TREE_H
+#define TREE_H
+
 #include <cstdint>
 #include "hashset.h"
 #include "matrixN.h"
@@ -50,7 +53,10 @@ bool INSERT(Matrix x, rootset &table) {
         idxs[NR+i] = intermediate.findOrPut(pair);
     }
 
-    return table.insert((uint64_t)idxs[2*NR-4]<<32 | idxs[2*NR-3]);
+    mat_idx root = (uint64_t)idxs[2*NR-4]<<32 | idxs[2*NR-3];
+    
+    // insert root
+    return table.insert(root);
 }
 
 Matrix GET(uint64_t root) {
@@ -68,3 +74,5 @@ Matrix GET(uint64_t root) {
     }
     return result;
 }
+
+#endif
