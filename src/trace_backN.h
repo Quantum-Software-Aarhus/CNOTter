@@ -9,13 +9,13 @@
 using trace = std::vector<std::pair<byte,byte>>;
 using hashset = HashSet<uint64_t, Linear, MurmurHash>;
 
-inline bool find_level(Matrix &m, hashset &level) {
-    representative(m);
-    return CONTAINS(m, level);
+inline bool find_level(const Matrix &m, hashset &level) {
+    Matrix n=m;
+    representative(n);
+    return CONTAINS(n, level);
 }
 
-Matrix step_back(Matrix x, hashset &level, trace &tr) {
-    uint64_t mask = (1 << N) - 1; // to select row i
+Matrix step_back(const Matrix &x, hashset &level, trace &tr) {
     for (byte i=0; i<N; i++) {
         for (byte j=0; j<N; j++) // add to row j
             if (i != j) {
@@ -28,10 +28,11 @@ Matrix step_back(Matrix x, hashset &level, trace &tr) {
     exit(-1);
 }
 
-Matrix trace_back(Matrix goal, hashset levels[], int depth, trace &tr) {
+Matrix trace_back(const Matrix &goal, hashset levels[], int depth, trace &tr) {
+    Matrix next = goal;
     for (int d=depth - 1; d>0; d--)
-        goal = step_back(goal, levels[d], tr);
-    return goal;
+        next = step_back(next, levels[d], tr);
+    return next;
 }
 
 // apply pi to all elements in trace tr
@@ -48,7 +49,7 @@ trace permute_trace(const perm pi, const trace &tr) {
 
 #if SWAP==0
 // assuming m1 and m2 are equivalent, find pi such that pi . m1 = m2
-void equiv_perm(Matrix m1, Matrix m2, perm pi) {
+void equiv_perm(const Matrix &m1, const Matrix &m2, perm pi) {
     perm pi1, pi2;
     representativePerm(m1, pi1);    // repr = pi1 . m1
     representativePerm(m2, pi2);    // repr = pi2 . m2
@@ -58,7 +59,7 @@ void equiv_perm(Matrix m1, Matrix m2, perm pi) {
 }
 #endif
 
-trace trace_back_middle(Matrix id, Matrix middle, Matrix goal, hashset bfs_fwd[], hashset bfs_bwd[], int fdepth, int bdepth, perm pi) {
+trace trace_back_middle(Matrix &id, Matrix &middle, Matrix &goal, hashset bfs_fwd[], hashset bfs_bwd[], int fdepth, int bdepth, perm pi) {
     trace fwd_trace, bwd_trace, result;
     Matrix id_found, goal_found;
     id_found = trace_back(middle, bfs_fwd, fdepth, fwd_trace);
@@ -106,7 +107,7 @@ void print_trace(Matrix m, Matrix goal, const trace &tr, perm pi) {
     for (std::pair<byte,byte> pair : tr) {
         byte i = pair.first, j = pair.second;
         printf("cx q[%u],q[%u];\n",i,j);
-        m.addrow(i,j);
+        m = m.addrow(i,j);
     }
     printf("\nResult of the circuit:\n");
     m.print();

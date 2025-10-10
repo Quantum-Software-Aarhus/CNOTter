@@ -21,7 +21,7 @@
 // NOTE: the size depends on if SWAPs are free or not
 
 #if SWAP==0
-const std::array<std::vector<byte>,9> levelSizes = {{
+const std::array<std::vector<byte>,21> levelSizes = {{
     // first number is for level depth=2 (externally: Depth=1)
     {}, //0
     {0}, // 1
@@ -32,6 +32,7 @@ const std::array<std::vector<byte>,9> levelSizes = {{
     {0,3,6,8,11,14,17,19,22,23,24,23,20,11,0,0}, //6
     {0,3,6,8,11,15,18,21,24,27,30,32,33,34,33,29,17,0,0}, //7
     {0,3,6,8,11,15,18,22,25,29,32,34 /* +1 */, /* guess */ 37,38,40,41,40,38,36,34,0,0} //8
+    // For 9 and larger, we stick to the numbers for 8.
 }};
 #else
 const std::array<std::vector<byte>,9> levelSizes = {{
@@ -47,6 +48,11 @@ const std::array<std::vector<byte>,9> levelSizes = {{
     {0,3,5,8,11,14,17,20,23,26,28,30,31,30,28,21,3,0,0,0,0,0} //8
 }};
 #endif
+
+inline byte predictSize(int depth) {
+    byte lookup = levelSizes[std::min(N,8)][depth-2]  ; // we only have lookup tables up to size 8
+    return std::min(std::max(lookup + E, 3), MAX); // add E and ensure result is in [3,MAX]
+}
 
 #if POLY==1
 std::array<std::atomic<counter>,N+1>poly; // coefficients of the polynomial at distance N/2
@@ -81,7 +87,7 @@ counter init_level(hashset levels[], Matrix &start) {
     levels[1] = hashset(); // level 1 (current)
     levels[1].init(3);
     counter Orbit = representative(start); // modifies start
-    INSERT(start,levels[1]);
+    INSERT(start, levels[1]);
     return Orbit;
 }
 
@@ -141,7 +147,7 @@ int generate_bfs(Matrix start, Matrix goal, byte limit, hashset bfs_levels[]) {
             { if (depth > 1) bfs_levels[depth-2].deinit(); }
         if (depth-1 == limit) return depth;
         depth++;
-        tableSize = std::min(std::max(levelSizes[N][depth-2] + E, 3), MAX);
+        tableSize = predictSize(depth);
         bfs_levels[depth] = hashset();
         bfs_levels[depth].init(tableSize);
         printf("Depth %u (2^%u): ", depth-1, tableSize); fflush(stdout);
@@ -193,7 +199,7 @@ triple bidirectional(Matrix start, Matrix goal, byte limit, hashset bfs_fwd[], h
         if (fdepth+bdepth-2 == limit) return Triple(m, fdepth, bdepth);
         if (forbit <= borbit) {
             fdepth++; 
-            tableSize = std::min(std::max(levelSizes[N][fdepth-2] + E, 3), MAX);
+            tableSize = predictSize(fdepth);
             printf("Fwd Depth %u (2^%u): ", fdepth-1, tableSize); fflush(stdout);
             bfs_fwd[fdepth] = hashset();
             bfs_fwd[fdepth].init(tableSize);
@@ -205,7 +211,7 @@ triple bidirectional(Matrix start, Matrix goal, byte limit, hashset bfs_fwd[], h
             bdepth++;
             // Note: this Bwd level is smaller than next Fwd one
             // Problem: Bwd's successor can still be larger than Fwd's successor (hence 10)
-            tableSize = std::min(std::max(levelSizes[N][fdepth-1] + E, 10), MAX); 
+            tableSize = predictSize(fdepth+1); 
             printf("Bwd Depth %u (2^%u): ", bdepth-1, tableSize); fflush(stdout);
             bfs_bwd[bdepth] = hashset();
             bfs_bwd[bdepth].init(tableSize);
@@ -230,8 +236,8 @@ int main(int argc, char const *argv[]) {
     options.getcanon=true;   // we want the canonical graph
     options.defaultptn=true; // default coloring
 #endif
-    if (N<1 || N>8) {
-        printf("N={%u} not supported, only N=1..8\n", N);
+    if (N<1 || N>64) {
+        printf("N={%u} not supported, only N=1..64\n", N);
         exit(-1);
     }
     if (POLY==1 && SWAP==1) {
@@ -259,7 +265,7 @@ int main(int argc, char const *argv[]) {
             printf("Cutting off at maximum distance: %d\n", limit);
     }
     if (argc>1 && argv[argc-1][0]!='-') {
-        Matrix Goal = Matrix::read(argv[argc-1]);
+        goal = Matrix::read(argv[argc-1]);
         //investigate(goal);
     }
     if (!(goal==Matrix(false))) {
@@ -270,7 +276,8 @@ int main(int argc, char const *argv[]) {
         if (m.first) {
             printf("Found at distance %u (%u + %u)\n", fdepth + bdepth - 2, fdepth-1, bdepth-1);
             perm pi;
-            trace concat = trace_back_middle(id, middle, goal, bfs_fwd, bfs_bwd, fdepth, bdepth, pi);
+            Matrix Middle = GET(middle);
+            trace concat = trace_back_middle(id, Middle, goal, bfs_fwd, bfs_bwd, fdepth, bdepth, pi);
             print_trace(id, goal, concat, pi);
         } else {
             printf("Goal not found after %d steps: \n", fdepth+bdepth-2);
