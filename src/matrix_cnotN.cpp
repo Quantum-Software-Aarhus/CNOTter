@@ -12,7 +12,7 @@
 #include "options.h" // defines N,E,MAX,SWAP,NAUTY,POLY,BEAT, see also matrix_cnot.sh
 #include "timing.h"
 #include "matrixN.h"
-#include "repr_nautyN.h" // TODO: other reprs
+#include "reprN.h"
 #include "trace_backN.h"
 #include "hashset.h" // thread-safe hash set from dtree project
 #include "tree.h"

@@ -45,20 +45,6 @@ trace permute_trace(const perm pi, const trace &tr) {
     return result;
 }
 
-//TODO: move elsewhere (repr.h)
-
-#if SWAP==0
-// assuming m1 and m2 are equivalent, find pi such that pi . m1 = m2
-void equiv_perm(const Matrix &m1, const Matrix &m2, perm pi) {
-    perm pi1, pi2;
-    representativePerm(m1, pi1);    // repr = pi1 . m1
-    representativePerm(m2, pi2);    // repr = pi2 . m2
-    compose_inv_perm(pi2, pi1, pi);
-    assert(m1.permute(pi1) == m2.permute(pi2)); // both are repr
-    assert(m1.permute(pi) == m2);  // pi . m1 = m2
-}
-#endif
-
 trace trace_back_middle(Matrix &id, Matrix &middle, Matrix &goal, hashset bfs_fwd[], hashset bfs_bwd[], int fdepth, int bdepth, perm pi) {
     trace fwd_trace, bwd_trace, result;
     Matrix id_found, goal_found;
@@ -83,8 +69,8 @@ trace trace_back_middle(Matrix &id, Matrix &middle, Matrix &goal, hashset bfs_fw
     perm pi1, pi2, pi3, pi4;
     equiv_perm2(id, id_found, pi1, pi2);
     equiv_perm2(goal_found, goal, pi3, pi4);
-    assert(permute2(id, pi1, pi2) == id_found);      // id_found = (pi1,pi2) . id 
-    assert(permute2(goal_found, pi3, pi4) == goal);  // goal = (pi3,pi4) . goal_found
+    assert(id.permute2(pi1, pi2) == id_found);      // id_found = (pi1,pi2) . id 
+    assert(goal_found.permute2(pi3, pi4) == goal);  // goal = (pi3,pi4) . goal_found
 
     // construct q1 := pi1 ; pi2^-1 ; pi4^-1 and apply to the trace
     perm q0, q1, p4inv;
@@ -117,8 +103,8 @@ void print_trace(Matrix m, Matrix goal, const trace &tr, perm pi) {
     printf("\nPermuted Result:\n");
     byte id[N];
     id_perm(id);
-    m=permute2(m,pi,id);
-    pretty_matrix(m);
+    m=m.permute2(pi,id);
+    m.print();
 #endif
     if (m==goal)
         printf("The result is correct!\n");

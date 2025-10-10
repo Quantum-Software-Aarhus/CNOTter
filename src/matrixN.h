@@ -146,5 +146,15 @@ public:
         return other;
     }
 
+    Matrix permute2(const uint8_t pi1[N], const uint8_t pi2[N]) const { // other[i][j] := this[pi1[i]][pi2[j]]
+        Matrix other;
+        for (uint8_t i=0; i<N; i++) {
+            for (uint8_t j=0; j<N; j++) {
+                other.set(i,j, get(pi1[i],pi2[j]));
+            }
+        }
+        return other;
+    }
+
 };
 #endif
