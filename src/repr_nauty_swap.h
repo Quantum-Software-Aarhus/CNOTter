@@ -37,13 +37,13 @@ matrix nauty2matrix(const graph* g) {
         But it might fail, so we test that rows N..2N-1 are non-zero
     */
 
-    for (byte i=N; i<2*N; i++) {
-        if (g[i] == 0) {
+    for (byte i=0; i<N; i++) {
+        if (g[i+N] == 0) {
             printf("\nProblem: Assumption on Nauty failed (maybe input was not full-rank?)\n");
             exit(-1);
         }
-        matrix row = g[2*N-(i-N)-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
-        y |= row << (N*(i-N));
+        matrix row = g[2*N-i-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
+        y |= row << (N*i);
     }
     return y;
 }
