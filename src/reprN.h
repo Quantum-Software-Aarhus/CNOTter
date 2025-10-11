@@ -7,7 +7,7 @@
 #elif NAUTY==1
 #include "repr_nautyN.h"
 #else
-#include "repr_perm.h"
+#include "repr_permN.h"
 #endif
 
 
