@@ -10,6 +10,9 @@ const byte m=1; // nauty
 const byte n=2*N; // 
 static DEFAULTOPTIONS_DIGRAPH(options);
 
+// NOTE: The current encoding only supports N up to 32, since we encode graphs in 64-bit words.
+// For larger N, we need to increase m.
+
 void matrix2nauty(const Matrix &y, graph g[m*n]) { // now always the same g
     EMPTYGRAPH(g,m,n);
 
@@ -39,14 +42,14 @@ Matrix nauty2matrix(const graph* g) {
         But it might fail, so we test that rows N..2N-1 are non-zero
     */
 
-    for (byte i=N; i<2*N; i++) {
-        if (g[i] == 0) {
+    for (byte i=0; i<N; i++) {
+        if (g[i+N] == 0) {
             printf("\nProblem: Assumption on Nauty failed (maybe input was not full-rank?)\n");
             exit(-1);
         }
         div_t wordi = div(i,NC);
-        uint64_t row = g[2*N-(i-N)-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
-        y._bits[wordi.quot] |= row << (N*(wordi.rem-N));
+        uint64_t row = g[2*N-i-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
+        y._bits[wordi.quot] |= row << (N*wordi.rem);
     }
     return y;
 }

@@ -236,8 +236,8 @@ int main(int argc, char const *argv[]) {
     options.getcanon=true;   // we want the canonical graph
     options.defaultptn=true; // default coloring
 #endif
-    if (N<1 || N>64) {
-        printf("N={%u} not supported, only N=1..64\n", N);
+    if (N<1 || N>20) {
+        printf("N={%u} not supported, only N=1..20\n", N);
         exit(-1);
     }
     if (POLY==1 && SWAP==1) {
