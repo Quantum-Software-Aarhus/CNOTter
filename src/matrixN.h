@@ -157,4 +157,28 @@ public:
     }
 
 };
+
+#if POLY==1 && GOAL==0
+
+// Test if index i is essential (interacts with another index)
+inline bool testEssential(const Matrix &x, byte i) {
+    if (!(x.get(i,i)))
+        return true;
+    for (byte j=0; j<N; j++)
+        if (j!=i && (x.get(i,j) || x.get(j,i)))
+            return true;
+    return false;
+}
+
+// Count the number of essential indices
+inline byte countEssential(const Matrix &x) {
+    byte ess=0;
+    for (byte i=0; i<N; i++)
+        if (testEssential(x,i)) ess++;
+    return ess;
+}
+#endif
+
+
+
 #endif

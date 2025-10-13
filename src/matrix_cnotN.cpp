@@ -60,7 +60,7 @@ inline byte predictSize(int depth) {
 }
 
 #if POLY==1
-std::array<std::atomic<counter>,N+1>poly; // coefficients of the polynomial at distance N/2
+std::array<std::array<std::atomic<counter>,N+1>,N/2+1> poly; // coefficients of the polynomial at distances up to N/2
 #endif
 
 
@@ -78,9 +78,9 @@ void Add(const Matrix &x, byte i, byte j,
         level += Orbit;
         count++;
 #if POLY==1
-        if (2*(depth-1)==N) {
+        if (2*(depth-1)<=N) {
             byte ess = countEssential(y);
-            poly[N-ess] += Orbit * (fac[ess] * fac[N-ess]) / fac[N];
+            poly[depth-1][N-ess] += Orbit / (fac[N] / (fac[ess] * fac[N-ess])); // order important to avoid overflow
         }
 #endif
     }
@@ -307,10 +307,11 @@ int main(int argc, char const *argv[]) {
             }
         }
 #if POLY==1
-        if (!(N&1) && (depth-1)*2 >= N) {
-            printf("Polynomial coefficients (%u/%u): [", N, N/2);
-            for (byte i=0; i<=N; i++)
-                printf("%lu%c ", poly[N-i].load(std::memory_order_relaxed), (i<N ? ',' : ']'));
+        printf("Polynomial coefficients (N=%u):\n", N);
+        for (int d=1; d<=std::min(N/2,depth-1); d++) {
+            printf("d=%u: [", d);
+            for (byte i=0; i<2*d+1; i++)
+                printf("%lu%c ", poly[d][N-i].load(std::memory_order_relaxed), (i<2*d ? ',' : ']'));
             printf("\n");
         }
 #endif
