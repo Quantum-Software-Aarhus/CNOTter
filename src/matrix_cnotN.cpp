@@ -21,7 +21,7 @@
 // NOTE: the size depends on if SWAPs are free or not
 
 #if SWAP==0
-const std::array<std::vector<byte>,21> levelSizes = {{
+const std::array<std::vector<byte>,11> levelSizes = {{
     // first number is for level depth=2 (externally: Depth=1)
     {}, //0
     {0}, // 1
@@ -31,11 +31,14 @@ const std::array<std::vector<byte>,21> levelSizes = {{
     {0,3,5,8,11,13,14,15,15,13,8,0,0}, // 5
     {0,3,6,8,11,14,17,19,22,23,24,23,20,11,0,0}, //6
     {0,3,6,8,11,15,18,21,24,27,30,32,33,34,33,29,17,0,0}, //7
-    {0,3,6,8,11,15,18,22,25,29,32,34 /* +1 */, /* guess */ 37,38,40,41,40,38,36,34,0,0} //8
-    // For 9 and larger, we stick to the numbers for 8.
+    {0,3,6,8,11,15,18,22,25,29,32,34 /* +1 */, /* guess */ 37,38,40,41,40,38,36,34,0,0}, //8
+    // NOTE: we subtracted one for (8,10) in order to manage cycle8 on qfat
+    {0,3,6,8,11,15,18,22,26,30,33, /* guess */ 35,37,38,40,41,40,38,36,34,0,0}, //9
+    {0,3,6,8,11,15,18,22,26,30,34, /* guess */ 36,37,38,40,41,40,38,36,34,0,0} //10
+    // For 11 and larger, we stick to the numbers for 10.
 }};
 #else
-const std::array<std::vector<byte>,9> levelSizes = {{
+const std::array<std::vector<byte>,11> levelSizes = {{
     // first number is for level depth=2 (externally: Depth=1)
     {}, //0
     {0}, // 1
@@ -45,12 +48,14 @@ const std::array<std::vector<byte>,9> levelSizes = {{
     {0,3,5,7,9,9,7,3,0,0,0,0,0}, // 5
     {0,3,5,8,10,13,14,15,13,10,3,0,0,0,0,0}, //6
     {0,3,5,8,11,14,16,19,21,22,22,20,13,2,0,0,0,0,0}, //7
-    {0,3,5,8,11,14,17,20,23,26,28,30,31,30,28,21,3,0,0,0,0,0} //8
+    {0,3,5,8,11,14,17,20,23,26,28,30,31,30,28,21,3,0,0,0,0,0}, //8
+    {0,3,5,8,11,14,17,21,24,28,31, /* guess */ 34, 34, 34, 34, 34, 34}, //9
+    {0,3,5,8,11,14,17,21,24,28,32, /* guess */ 34, 34, 34, 34, 34, 34} //10
 }};
 #endif
 
 inline byte predictSize(int depth) {
-    byte lookup = levelSizes[std::min(N,8)][depth-2]  ; // we only have lookup tables up to size 8
+    byte lookup = levelSizes[std::min(N, 10)][depth-2]  ; // we only have lookup tables up to size 10
     return std::min(std::max(lookup + E, 3), MAX); // add E and ensure result is in [3,MAX]
 }
 
