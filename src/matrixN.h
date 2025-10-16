@@ -130,9 +130,11 @@ public:
     Matrix addrow(uint8_t i, uint8_t j) const {
         assert(i!=j && i<N && j<N);
         Matrix result=*this;
-        //printf("Adding row %d to row %d\n",i,j);
-        for (uint8_t k=0; k<N; k++)
-            result.set(j,k,get(i,k) != get(j,k)); // xor
+        div_t wordi = div(i,NC);
+        div_t wordj = div(j,NC);
+        uint64_t mask = (1UL << N) - 1; // single row of 1s
+        uint64_t row = result._bits[wordi.quot] & (mask << (N*wordi.rem)); // select row i
+        result._bits[wordj.quot] ^= (row >> (N*wordi.rem)) << (N*wordj.rem);
         return result;
     };
 
