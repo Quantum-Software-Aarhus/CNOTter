@@ -59,10 +59,15 @@ inline byte predictSize(int depth) {
     return std::min(std::max(lookup + E, 3), MAX); // add E and ensure result is in [3,MAX]
 }
 
+#if SWAP==0
+#define Orbit(stab) (fac[N] / stab)
+#else
+#define Orbit(stab) (fac[N] * (fac[N] / stab))
+#endif
+
 #if POLY==1
 std::array<std::array<std::atomic<counter>,N+1>,N/2+1> poly; // coefficients of the polynomial at distances up to N/2
 #endif
-
 
 rootset bfs_levels[3*N];    // for one-directional BFS
 rootset bfs_fwd[(3*N+2)/2]; // for bi-directional BFS
@@ -72,15 +77,15 @@ void Add(const Matrix &x, byte i, byte j,
                 rootset *prev, rootset *current, rootset *next, int depth,
                 counter &level, counter &count) {
     Matrix y = x.addrow(i,j);
-    counter Orbit = representative(y);
+    counter Stab = representative(y);
     if (!CONTAINS(y,*prev) && !CONTAINS(y,*current) && INSERT(y,*next)) {
         // only insert and count if new; 
-        level += Orbit;
+        level += Orbit(Stab);
         count++;
 #if POLY==1
         if (2*(depth-1)<=N) {
             byte ess = countEssential(y);
-            poly[depth-1][N-ess] += Orbit / (fac[N] / (fac[ess] * fac[N-ess])); // order important to avoid overflow
+            poly[depth-1][ess] += (fac[ess] * fac[N-ess]) / Stab;
         }
 #endif
     }
@@ -91,9 +96,9 @@ counter init_level(hashset levels[], Matrix &start) {
     levels[0].init(3);
     levels[1] = hashset(); // level 1 (current)
     levels[1].init(3);
-    counter Orbit = representative(start); // modifies start
+    counter Stab = representative(start); // modifies start
     INSERT(start, levels[1]);
-    return Orbit;
+    return Orbit(Stab);
 }
 
 // explore and count all successors of the current level
@@ -245,10 +250,6 @@ int main(int argc, char const *argv[]) {
         printf("N={%u} not supported, only N=1..20\n", N);
         exit(-1);
     }
-    if (POLY==1 && SWAP==1) {
-        printf("Polynomial coefficients are not supported with SWAP\n");
-        exit(-1);
-    }
     printf("Handling matrices of size N = %u\n", N);
     printf("Using DTree + %u extra bits, max-size %u\n", E, MAX);
     printf("Use Nauty: %u. Swaps-for-free: %u. Polynomial: %u\n", NAUTY, SWAP, POLY);
@@ -310,8 +311,8 @@ int main(int argc, char const *argv[]) {
         printf("Polynomial coefficients (N=%u):\n", N);
         for (int d=1; d<=std::min(N/2,depth-1); d++) {
             printf("d=%u: [", d);
-            for (byte i=0; i<2*d+1; i++)
-                printf("%lu%c ", poly[d][N-i].load(std::memory_order_relaxed), (i<2*d ? ',' : ']'));
+            for (byte i=0; i<=2*d; i++)
+                printf("%lu%c ", poly[d][i].load(std::memory_order_relaxed), (i<2*d ? ',' : ']'));
             printf("\n");
         }
 #endif

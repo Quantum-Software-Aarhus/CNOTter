@@ -61,9 +61,8 @@ inline uint64_t representative(Matrix &y) {
     statsblk stats;
     matrix2nauty(y,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
-    uint64_t mysize = stats.grpsize;
     y=nauty2matrix(h); // this value is returned
-    return fac[N] * fac[N] / mysize;
+    return stats.grpsize;
 }
 
 // return the permutation from x to its representative
@@ -78,8 +77,7 @@ void representativePerm2(const Matrix &x, perm pi1, perm pi2) {
         pi2[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-100
         pi1[N-1-i] = 2*N-1-lab[N+i]; // revert N-1..0 to 0..N-100
     }
-    Matrix y=nauty2matrix(h);
-    assert(x.permute2(pi1, pi2) == y);
+    assert(x.permute2(pi1, pi2) == nauty2matrix(h));
 }
 
 // assuming m1 and m2 are equivalent, find sig, tau such that (sig,tau) . m1 = m2

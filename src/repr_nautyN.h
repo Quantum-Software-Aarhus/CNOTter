@@ -43,10 +43,9 @@ inline counter representative(Matrix &y) {
     statsblk stats;
     matrix2nauty(y,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
-    counter mysize = stats.grpsize;
     // if (stats.grpsize2) {printf("Large group!\n"); exit(-1); }
     y=nauty2matrix(h); // this value is returned
-    return fac[N] / mysize;
+    return stats.grpsize;
 }
 
 // return the permutation from x to its representative
@@ -58,7 +57,7 @@ void representativePerm(const Matrix &x, perm pi) {
     matrix2nauty(x,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
     for (byte i=0; i<N; i++)
-        pi[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-100
+        pi[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-1
     assert(x.permute(pi) == nauty2matrix(h));
 }
 

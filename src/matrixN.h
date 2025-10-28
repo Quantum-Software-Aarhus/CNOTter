@@ -162,6 +162,7 @@ public:
 
 #if POLY==1 && GOAL==0
 
+#if SWAP==0
 // Test if index i is essential (interacts with another index)
 inline bool testEssential(const Matrix &x, byte i) {
     if (!(x.get(i,i)))
@@ -179,8 +180,31 @@ inline byte countEssential(const Matrix &x) {
         if (testEssential(x,i)) ess++;
     return ess;
 }
+
+#else
+
+// Count the number of ones that are lonely in their row and column
+inline byte countEssential(const Matrix &x) {
+    byte ess=0; // we count the inessential indices
+    for (byte i=0; i<N; i++) {
+        byte count=0, jj; // count number of ones and remember their column
+        for (byte j=0; j<N && count<2; j++)
+            if (x.get(i,j)) { count++; jj=j; }
+        if (count==1) {
+            bool essential=true;
+            for (byte k=0; k<N; k++) // test of rest of column is zeros
+                if (k!=i && x.get(k,jj)) {
+                    essential = false;  
+                    break;
+                }
+            if (essential) ess++;
+            }
+    }
+    return N-ess;
+}
+
 #endif
 
-
+#endif
 
 #endif
