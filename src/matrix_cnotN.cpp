@@ -62,7 +62,7 @@ inline byte predictSize(int depth) {
 #if SWAP==0
 #define Orbit(stab) (fac[N] / stab)
 #else
-#define Orbit(stab) (fac[N] * (fac[N] / stab))
+#define Orbit(stab) (fac[N] * (fac[N] / stab)) // TODO: Check that stab divides fac[N]
 #endif
 
 #if POLY==1
