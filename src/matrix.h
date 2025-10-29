@@ -2,7 +2,6 @@
 #define MATRIX_H
 
 #include "options.h"
-#include <cstdint>
 
 typedef uint8_t byte;
 typedef uint64_t matrix;    // store at most 8x8 Booleans
@@ -101,12 +100,15 @@ matrix permute2(matrix x, const perm pi1, const perm pi2) {
 
 #if POLY==1 && GOAL==0
 
+#define get(x,i,j) (x & 1UL<<(N*i+j))
+
+#if SWAP==0
 // Test if index i is essential (interacts with another index)
 inline bool testEssential(matrix x, byte i) {
-    if (!(x & 1UL<<(N+1)*i))
+    if (!get(x,i,i))
         return true;
     for (byte j=0; j<N; j++)
-        if (j!=i && (x & 1UL<<(N*j+i) || x & 1UL<<(N*i+j)))
+        if (j!=i && (get(x,j,i) || get(x,i,j)))
             return true;
     return false;
 }
@@ -118,6 +120,30 @@ inline byte countEssential(matrix x) {
         if (testEssential(x,i)) ess++;
     return ess;
 }
+#else
+
+// Count the number of ones that are lonely in their row and column
+inline byte countEssential(matrix x) {
+    byte ess=0; // we count the inessential indices
+    for (byte i=0; i<N; i++) {
+        byte count=0, jj; // count number of ones and remember their column
+        for (byte j=0; j<N && count<2; j++)
+            if (get(x,i,j)) { count++; jj=j; }
+        if (count==1) {
+            bool essential=true;
+            for (byte k=0; k<N; k++) // test of rest of column is zeros
+                if (k!=i && get(x,k,jj)) {
+                    essential = false;  
+                    break;
+                }
+            if (essential) ess++;
+            }
+    }
+    return N-ess;
+}
+
+#endif
+
 #endif
 
 #endif

@@ -37,27 +37,26 @@ matrix nauty2matrix(const graph* g) {
         But it might fail, so we test that rows N..2N-1 are non-zero
     */
 
-    for (byte i=0; i<N; i++) {
-        if (g[i+N] == 0) {
+    for (byte i=N; i<2*N; i++) {
+        if (g[i] == 0) {
             printf("\nProblem: Assumption on Nauty failed (maybe input was not full-rank?)\n");
             exit(-1);
         }
-        matrix row = g[2*N-i-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
-        y |= row << (N*i);
+        matrix row = g[2*N-(i-N)-1] >> (WORDSIZE-N); // convert to 64-bit before shift-left
+        y |= row << (N*(i-N));
     }
     return y;
 }
 
-inline uint64_t representative(matrix &y) {
+inline counter representative(matrix &y) {
     graph g[m*n];
     graph h[m*n];
     int lab[n], ptn[n], orbits[n];
     statsblk stats;
     matrix2nauty(y,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
-    uint64_t mysize = stats.grpsize;
     y=nauty2matrix(h); // this value is returned
-    return fac[N] * fac[N] / mysize;
+    return stats.grpsize;
 }
 
 // return the permutation from x to its representative
@@ -68,12 +67,11 @@ void representativePerm2(matrix x, perm pi1, perm pi2) {
     statsblk stats;
     matrix2nauty(x,g);
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,h);
-    matrix y=nauty2matrix(h);
     for (byte i=0; i<N; i++) {
-        pi2[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-100
-        pi1[N-1-i] = 2*N-1-lab[N+i]; // revert N-1..0 to 0..N-100
+        pi2[N-1-i] = N-1-lab[i];       // revert N-1..0 to 0..N-1
+        pi1[N-1-i] = 2*N-1-lab[N+i];   // revert N-1..0 to 0..N-1
     }
-    assert(permute2(x, pi1, pi2) == y);
+    assert(permute2(x, pi1, pi2) == nauty2matrix(h));
 }
 
 // assuming m1 and m2 are equivalent, find sig, tau such that (sig,tau) . m1 = m2
@@ -94,7 +92,7 @@ void investigate(matrix x) {
     representativePerm2(x, pi1, pi2);
     printf("rows:\n"); pretty_perm(pi1);
     printf("cols:\n"); pretty_perm(pi2);
-    uint64_t stabilizers = representative(x);
+    counter stabilizers = representative(x);
     printf("Canonical matrix:\n");
     pretty_matrix(x);
     printf("Represents %lu matrices.\n\n",stabilizers);

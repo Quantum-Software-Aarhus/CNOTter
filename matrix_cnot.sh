@@ -63,11 +63,6 @@ do
     esac
 done
 
-if [ $SWAP -eq 1 ] && [ $POLY -eq 1 ]; then
-    echo "Polynomial coefficients switched off: not supported with SWAP"
-    POLY=0
-fi
-
 if [ $SWAP -eq 1 ] && [ $NAUTY -eq 0 ]; then
     echo "Nauty switched on: SWAP is only supported with Nauty"
     NAUTY=1

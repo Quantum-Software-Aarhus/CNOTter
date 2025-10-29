@@ -2,5 +2,5 @@
 
 cd nauty/
 ./configure --enable-tls
-make nautyW1.a
+make nautyW1.a nautyL1.a
 cd ..

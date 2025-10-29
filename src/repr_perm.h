@@ -75,11 +75,11 @@ inline byte compute_cycles(byte cycles[], matrix &y) {
 // Assume y is normalized
 // Update y to the smallest representative
 // Return the number of "essential" stabilizers
-inline uint64_t explore_orbit(matrix &y, byte cycles[], byte essential) {
+inline counter explore_orbit(matrix &y, byte cycles[], byte essential) {
     perm pi; id_perm(pi);
 
     // traverse all nested permutations (orbit) and count stabilizers
-    uint64_t stabilizers = 1; // the id is surely a stabilizer
+    counter stabilizers = 1; // the id is surely a stabilizer
     matrix smallest = y;      // maintain the smallest matrix in the orbit
     while (next_cycle_perm(cycles, pi + essential)) { // we counted id already
         matrix z = permute(y, pi);
@@ -93,11 +93,11 @@ inline uint64_t explore_orbit(matrix &y, byte cycles[], byte essential) {
     return stabilizers;
 }
 
-inline uint64_t representative(matrix &y) {
+inline counter representative(matrix &y) {
     byte cycles[N+1];  // cycles for permutation
     byte essential = compute_cycles(cycles, y); // now y is normalized
-    uint64_t stab = explore_orbit(y, cycles, essential);
-    return fac[N]/(stab * fac[essential]);
+    counter stab = explore_orbit(y, cycles, essential);
+    return stab * fac[essential];
 }
 
 // return the permutation from x to its representative
@@ -177,8 +177,8 @@ void investigate(matrix x) {
     pretty_matrix(y);
     byte essential = compute_cycles(cycles, y);
     pretty_cycles(essential, cycles);
-    uint64_t stabilizer = explore_orbit(y, cycles, essential);
-    uint64_t orbits = fac[N]/(stabilizer * fac[essential]);
+    counter stabilizer = explore_orbit(y, cycles, essential);
+    counter orbits = fac[N]/(stabilizer * fac[essential]);
     printf("Minimized matrix:\n");
     pretty_matrix(y);
     representativePerm(x,pi);

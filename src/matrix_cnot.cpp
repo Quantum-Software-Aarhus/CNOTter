@@ -48,47 +48,53 @@ const std::array<std::vector<byte>,9> levelSizes = {{
 #endif
 
 #if POLY==1
-std::array<std::atomic<uint64_t>,N+1>poly; // coefficients of the polynomial at distance N/2
+std::array<std::array<std::atomic<counter>,N+1>,N/2+1> poly; // coefficients of the polynomial at distances up to N/2
 #endif
 
 hashset bfs_levels[3*N];    // for one-directional BFS
 hashset bfs_fwd[(3*N+2)/2]; // for bi-directional BFS
 hashset bfs_bwd[(3*N+1)/2];
 
+#if SWAP==0
+#define Orbit(stab) (fac[N]/(stab))
+#else
+#define Orbit(stab) (fac[N]*(fac[N]/(stab))) // Note: stab divides fac[N]
+#endif
+
 void Add(matrix x, byte i, byte j, 
             hashset *prev, hashset *current, hashset *next, int depth,
-            uint64_t &level, uint64_t &count) {
+            counter &level, counter &count) {
     uint64_t mask = (1UL<<N*(i+1)) - (1UL<<N*i);
     uint64_t row = (x & mask) >> i*N;
     matrix y = x ^ (row << j*N);
-    uint64_t Orbit = representative(y);
+    counter Stab = representative(y);
     if (!prev->contains(y) && !current->contains(y) && next->insert(y)) {
         // only insert and count if new; 
-        level += Orbit;
+        level += Orbit(Stab);
         count++;
 #if POLY==1
-        if (2*(depth-1)==N) {
+        if (2*(depth-1)<=N) {
             byte ess = countEssential(y);
-            poly[N-ess] += Orbit * (fac[ess] * fac[N-ess]) / fac[N];
+            poly[depth-1][ess] += (fac[ess] * fac[N-ess]) / Stab;
         }
 #endif
     }
 }
 
-uint64_t init_level(hashset levels[], matrix start) {
+counter init_level(hashset levels[], matrix start) {
     levels[0] = hashset(); // level 0 (prev)
     levels[0].init(3);
     levels[1] = hashset(); // level 1 (current)
     levels[1].init(3);
-    uint64_t Orbit = representative(start); // modifies start
+    counter Orbit = representative(start); // modifies start
     levels[1].insert(start);
     return Orbit;
 }
 
 // explore and count all successors of the current level
-uint64_t next_level(uint64_t &size, hashset levels[], uint32_t depth) { 
-    std::atomic<uint64_t> level(0);
-    std::atomic<uint64_t> count(0);
+counter next_level(counter &size, hashset levels[], uint32_t depth) { 
+    std::atomic<counter> level(0);
+    std::atomic<counter> count(0);
 
     // current and prev are accessed read-only
     // next is modified (extended) concurrently
@@ -99,7 +105,7 @@ uint64_t next_level(uint64_t &size, hashset levels[], uint32_t depth) {
 
     current->parallelForAll(
         [&](matrix x){
-            uint64_t loc_level=0, loc_count=0;
+            counter loc_level=0, loc_count=0;
             for (byte i=0; i<N; i++)
                 for (byte j=0; j<N; j++) // add to row j
                     if (i != j) Add(x, i, j, prev, current, next, depth, loc_level, loc_count);
@@ -126,7 +132,7 @@ int generate_bfs(matrix start, matrix goal, byte limit, hashset bfs_levels[]) {
 
     // initialize Breadth-First Search
     byte depth = 1, tableSize = 3;
-    uint64_t level, levels, orbit, orbits;
+    counter level, levels, orbit, orbits;
     orbit = orbits = 1;
 
     printf("Depth 0 (2^3): "); fflush(stdout);
@@ -179,7 +185,7 @@ triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], h
 
     // initialize Bidirectional fwd/bwd Search
     byte fdepth = 1, bdepth=1, tableSize;
-    uint64_t level, forbit, borbit, levels, orbits;
+    counter level, forbit, borbit, levels, orbits;
     forbit = borbit = 1; orbits = 2;
     levels = level = init_level(bfs_fwd, start);
     printf("Fwd Depth 0 (2^3): "); report(level, forbit);
@@ -231,10 +237,6 @@ int main(int argc, char const *argv[]) {
 #endif
     if (N<1 || N>8) {
         printf("N={%u} not supported, only N=1..8\n", N);
-        exit(-1);
-    }
-    if (POLY==1 && SWAP==1) {
-        printf("Polynomial coefficients are not supported with SWAP\n");
         exit(-1);
     }
     printf("Handling matrices of size N = %u\n", N);
@@ -292,10 +294,11 @@ int main(int argc, char const *argv[]) {
             }
         }
 #if POLY==1
-        if (!(N&1) && (depth-1)*2 >= N) {
-            printf("Polynomial coefficients (%u/%u): [", N, N/2);
-            for (byte i=0; i<=N; i++)
-                printf("%lu%c ", poly[N-i].load(std::memory_order_relaxed), (i<N ? ',' : ']'));
+        printf("Polynomial coefficients (N=%u):\n", N);
+        for (int d=1; d<=std::min(N/2,depth-1); d++) {
+            printf("d=%u: [", d);
+            for (byte i=0; i<=2*d; i++)
+                printf("%lu%c ", poly[d][i].load(std::memory_order_relaxed), (i<2*d ? ',' : ']'));
             printf("\n");
         }
 #endif
