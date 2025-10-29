@@ -11,7 +11,6 @@
 
 using byte = uint8_t;
 using mat_idx = uint64_t;
-using counter = uint64_t;
 
 // TODO: move to permutation.h
 
