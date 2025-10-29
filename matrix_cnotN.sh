@@ -72,7 +72,7 @@ fi
 
 exec=matrix_cnot${QUBITS}.exe
 opts="-DN=$QUBITS -DE=$EXTRA -DMAX=$MAX -DPOLY=$POLY -DNAUTY=$NAUTY -DSWAP=$SWAP -DBEAT=$BEAT"
-args="-fopenmp -O3  -march=native -std=c++17" # -DNDEBUG
+args="-fopenmp -O3 -DNDEBUG -march=native -std=c++17"
 if [ $NAUTY -eq 1 ]; then
     nauty_args="-I./nauty nauty/nautyL1.a -DWORDSIZE=64 -DMAXN=WORDSIZE"
 fi
