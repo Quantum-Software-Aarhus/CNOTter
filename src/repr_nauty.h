@@ -10,7 +10,7 @@ const byte m=1; // nauty
 const byte n=N; // 
 static DEFAULTOPTIONS_DIGRAPH(options);
 
-void matrix2nauty(const matrix &y, graph g[m*n]) { // now always the same g
+inline void matrix2nauty(const matrix &y, graph g[m*n]) { // now always the same g
     EMPTYGRAPH(g,m,n);
     for (byte i=0; i<N; i++) {
         matrix row = ((y >> N*i) & ((1<<N) - 1));
@@ -22,7 +22,7 @@ void matrix2nauty(const matrix &y, graph g[m*n]) { // now always the same g
     }
 }
 
-matrix nauty2matrix(const graph* g) {
+inline matrix nauty2matrix(const graph* g) {
     matrix y=0LL;
     for (byte i=0; i<N; i++) {
         // Nauty uses most-significant bits:

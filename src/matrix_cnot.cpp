@@ -62,13 +62,13 @@ hashset bfs_bwd[(3*N+1)/2];
 #endif
 
 void Add(matrix x, byte i, byte j, 
-            hashset *prev, hashset *current, hashset *next, int depth,
+            hashset *levels, int depth,
             counter &level, counter &count) {
     uint64_t mask = (1UL<<N*(i+1)) - (1UL<<N*i);
     uint64_t row = (x & mask) >> i*N;
     matrix y = x ^ (row << j*N);
     counter Stab = representative(y);
-    if (!prev->contains(y) && !current->contains(y) && next->insert(y)) {
+    if (!levels[depth-2].contains(y) && !levels[depth-1].contains(y) && levels[depth].insert(y)) {
         // only insert and count if new; 
         level += Orbit(Stab);
         count++;
@@ -99,16 +99,12 @@ counter next_level(counter &size, hashset levels[], uint32_t depth) {
     // current and prev are accessed read-only
     // next is modified (extended) concurrently
 
-    auto prev = &levels[depth-2];
-    auto current = &levels[depth-1];
-    auto next = &levels[depth];
-
-    current->parallelForAll(
+    levels[depth-1].parallelForAll(
         [&](matrix x){
             counter loc_level=0, loc_count=0;
             for (byte i=0; i<N; i++)
                 for (byte j=0; j<N; j++) // add to row j
-                    if (i != j) Add(x, i, j, prev, current, next, depth, loc_level, loc_count);
+                    if (i != j) Add(x, i, j, levels, depth, loc_level, loc_count);
         if (loc_level > 0) {
             level += loc_level;
             count += loc_count;
