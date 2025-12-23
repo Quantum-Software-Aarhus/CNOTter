@@ -9,22 +9,22 @@ typedef byte perm[N];       // permutation of N elements
 
 void pretty_perm(const perm pi) {
     for (byte i=0; i<N; i++)
-        printf("%3u", i);
-    printf("\n");
+        fprintf(stderr,"%3u", i);
+    fprintf(stderr,"\n");
     for (byte i=0; i<N; i++)
-        printf("%3u", pi[i]);
-    printf("\n");
+        fprintf(stderr,"%3u", pi[i]);
+    fprintf(stderr,"\n");
 }
 
 void pretty_matrix(matrix x) {
     std::string delimiter(N*2-1,'=');
-    std::cout << delimiter << std::endl;
+    std::cerr << delimiter << std::endl;
     for (byte i=0; i<N; i++) {
         for (byte j=0; j<N; j++, x >>= 1)
-            printf("%lu ", x & 1);
-        printf("\n");
+            fprintf(stderr,"%lu ", x & 1);
+        fprintf(stderr,"\n");
     }
-    std::cout << delimiter << std::endl;
+    std::cerr << delimiter << std::endl;
 }
 
 matrix read_matrix(std::string filename) {

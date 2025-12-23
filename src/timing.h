@@ -15,13 +15,13 @@ uint64_t currentTime() {
 }
 
 void report(uint64_t level, uint64_t orbit) {
-    std::cout   << std::setprecision(std::numeric_limits<double>::digits10)
+    std::cerr   << std::setprecision(std::numeric_limits<double>::digits10)
                 << "(" << currentTime() << "s) ("
                 << level << " elts) (" << orbit << " orbits)" << std::endl;
 }
 
 void lifeBeat(int worker, uint64_t level, uint64_t orbit) {
-    std::cout   << std::setprecision(std::numeric_limits<double>::digits10)
+    std::cerr   << std::setprecision(std::numeric_limits<double>::digits10)
                 << "...Worker " << worker
                 << " (" << currentTime() << "s) ("
                 << level << " elts) (" << orbit << " orbits)" << std::endl;

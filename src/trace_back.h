@@ -98,21 +98,21 @@ void print_trace(matrix m, matrix goal, const trace &tr, perm pi) {
         matrix row = (m & (mask << N*i)) >> N*i;
         m ^= row << N*j;
     }
-    printf("\nResult of the circuit:\n");
+    fprintf(stderr,"\nResult of the circuit:\n");
     pretty_matrix(m);
 #if SWAP==1
-    printf("\nRow permutation:\n");
+    fprintf(stderr,"\nRow permutation:\n");
     pretty_perm(pi);
-    printf("\nPermuted Result:\n");
+    fprintf(stderr,"\nPermuted Result:\n");
     byte id[N];
     id_perm(id);
     m=permute2(m,pi,id);
     pretty_matrix(m);
 #endif
     if (m==goal)
-        printf("The result is correct!\n");
+        fprintf(stderr,"The result is correct!\n");
     else
-        printf("Error: result is incorrect!\n");
+        fprintf(stderr,"Error: result is incorrect!\n");
 }
 
 #endif

@@ -135,7 +135,7 @@ int generate_bfs(matrix start, matrix goal, byte limit, hashset bfs_levels[]) {
     counter level, levels, orbit, orbits;
     orbit = orbits = 1;
 
-    printf("Depth 0 (2^3): "); fflush(stdout);
+    fprintf(stderr,"Depth 0 (2^3): "); fflush(stderr);
     levels = level = init_level(bfs_levels, start);
 
     while (orbit) {
@@ -149,18 +149,18 @@ int generate_bfs(matrix start, matrix goal, byte limit, hashset bfs_levels[]) {
         tableSize = std::min(std::max(levelSizes[N][depth-2] + E, 3), MAX);
         bfs_levels[depth] = hashset();
         bfs_levels[depth].init(tableSize);
-        printf("Depth %u (2^%u): ", depth-1, tableSize); fflush(stdout);
+        fprintf(stderr,"Depth %u (2^%u): ", depth-1, tableSize); fflush(stderr);
         levels += level = next_level(orbit, bfs_levels, depth);
         orbits += orbit;
     }
     depth--;
-    printf("--\n");
+    fprintf(stderr,"--\n");
 /*  // print matrices at the last level (out of curiosity)
     bfs_levels[depth].forAll(
         [](matrix c) { pretty_matrix(c); }
     );
 */
-    printf("Total size: %lu (%lu orbits), completed at depth %u\n", levels, orbits, depth-1);
+    fprintf(stderr,"Total size: %lu (%lu orbits), completed at depth %u\n", levels, orbits, depth-1);
     return depth;
 }
 
@@ -188,9 +188,9 @@ triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], h
     counter level, forbit, borbit, levels, orbits;
     forbit = borbit = 1; orbits = 2;
     levels = level = init_level(bfs_fwd, start);
-    printf("Fwd Depth 0 (2^3): "); report(level, forbit);
+    fprintf(stderr,"Fwd Depth 0 (2^3): "); report(level, forbit);
     levels += level = init_level(bfs_bwd, goal);
-    printf("Bwd Depth 0 (2^3): "); report(level, borbit);
+    fprintf(stderr,"Bwd Depth 0 (2^3): "); report(level, borbit);
     matrix m = intersect(bfs_fwd[fdepth], bfs_bwd[bdepth]);
     if (m) return Triple(m, fdepth, bdepth);
 
@@ -199,7 +199,7 @@ triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], h
         if (forbit <= borbit) {
             fdepth++; 
             tableSize = std::min(std::max(levelSizes[N][fdepth-2] + E, 3), MAX);
-            printf("Fwd Depth %u (2^%u): ", fdepth-1, tableSize); fflush(stdout);
+            fprintf(stderr,"Fwd Depth %u (2^%u): ", fdepth-1, tableSize); fflush(stderr);
             bfs_fwd[fdepth] = hashset();
             bfs_fwd[fdepth].init(tableSize);
             levels += level = next_level(forbit, bfs_fwd, fdepth);
@@ -211,7 +211,7 @@ triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], h
             // Note: this Bwd level is smaller than next Fwd one
             // Problem: Bwd's successor can still be larger than Fwd's successor (hence 10)
             tableSize = std::min(std::max(levelSizes[N][fdepth-1] + E, 10), MAX); 
-            printf("Bwd Depth %u (2^%u): ", bdepth-1, tableSize); fflush(stdout);
+            fprintf(stderr,"Bwd Depth %u (2^%u): ", bdepth-1, tableSize); fflush(stderr);
             bfs_bwd[bdepth] = hashset();
             bfs_bwd[bdepth].init(tableSize);
             levels += level = next_level(borbit, bfs_bwd, bdepth);
@@ -221,7 +221,7 @@ triple bidirectional(matrix start, matrix goal, byte limit, hashset bfs_fwd[], h
         m = intersect(bfs_fwd[fdepth], bfs_bwd[bdepth]);
         if (m) return Triple(m, fdepth, bdepth);
     }
-    printf("Not found at distance %u+%u (%lu, %lu)\n", fdepth-1, bdepth-1, levels, orbits);
+    fprintf(stderr,"Not found at distance %u+%u (%lu, %lu)\n", fdepth-1, bdepth-1, levels, orbits);
     return Triple(0, fdepth, bdepth);
 }
 
@@ -236,14 +236,14 @@ int main(int argc, char const *argv[]) {
     options.defaultptn=true; // default coloring
 #endif
     if (N<1 || N>8) {
-        printf("N={%u} not supported, only N=1..8\n", N);
+        fprintf(stderr,"N={%u} not supported, only N=1..8\n", N);
         exit(-1);
     }
-    printf("Handling matrices of size N = %u\n", N);
-    printf("Using DTree + %u extra bits, max-size %u\n", E, MAX);
-    printf("Use Nauty: %u. Swaps-for-free: %u. Polynomial: %u\n", NAUTY, SWAP, POLY);
+    fprintf(stderr,"Handling matrices of size N = %u\n", N);
+    fprintf(stderr,"Using DTree + %u extra bits, max-size %u\n", E, MAX);
+    fprintf(stderr,"Use Nauty: %u. Swaps-for-free: %u. Polynomial: %u\n", NAUTY, SWAP, POLY);
     #if defined(_OPENMP)
-        printf("Running with %d OpenMP threads\n",omp_get_max_threads());
+        fprintf(stderr,"Running with %d OpenMP threads\n",omp_get_max_threads());
     #endif
 
     matrix id=1; // compute identity matrix
@@ -254,7 +254,7 @@ int main(int argc, char const *argv[]) {
     if (argc>1 && argv[1][0]=='-') {
         limit = atoi(argv[1]+1); // skip the leading '-'
         if (limit!=(byte)-1)     // unsigned, so this is 255
-            printf("Cutting off at maximum distance: %d\n", limit);
+            fprintf(stderr,"Cutting off at maximum distance: %d\n", limit);
     }
     if (argc>1 && argv[argc-1][0]!='-') {
         goal = read_matrix(argv[argc-1]);
@@ -267,12 +267,12 @@ int main(int argc, char const *argv[]) {
         int fdepth = m.second.first;
         int bdepth = m.second.second;
         if (m.first) {
-            printf("Found at distance %u (%u + %u)\n", fdepth + bdepth - 2, fdepth-1, bdepth-1);
+            fprintf(stderr,"Found at distance %u (%u + %u)\n", fdepth + bdepth - 2, fdepth-1, bdepth-1);
             perm pi;
             trace concat = trace_back_middle(id, middle, goal, bfs_fwd, bfs_bwd, fdepth, bdepth, pi);
             print_trace(id, goal, concat, pi);
         } else {
-            printf("Goal not found after %d steps: \n", fdepth+bdepth-2);
+            fprintf(stderr,"Goal not found after %d steps: \n", fdepth+bdepth-2);
             pretty_matrix(goal);
         }
     } else {
@@ -280,7 +280,7 @@ int main(int argc, char const *argv[]) {
         if (goal) { // currently unreachable, since bidirectional is preferred
             if (depth < 0) { // negative means goal is found 
                 depth = -depth;
-                printf("Goal found at level %d\n", depth-1);
+                fprintf(stderr,"Goal found at level %d\n", depth-1);
                 trace bfs_trace;
                 matrix other = trace_back(goal, bfs_levels, depth, bfs_trace);
                 assert(other==id);
@@ -289,20 +289,20 @@ int main(int argc, char const *argv[]) {
                 print_trace(other, goal, bfs_trace, pi);
             }
             else { // currently unreachable
-                printf("Goal not found after %d steps: \n", depth-1);
+                fprintf(stderr,"Goal not found after %d steps: \n", depth-1);
                 pretty_matrix(goal);
             }
         }
 #if POLY==1
-        printf("Polynomial coefficients (N=%u):\n", N);
+        fprintf(stderr,"Polynomial coefficients (N=%u):\n", N);
         for (int d=1; d<=std::min(N/2,depth-1); d++) {
-            printf("d=%u: [", d);
+            fprintf(stderr,"d=%u: [", d);
             for (byte i=0; i<=2*d; i++)
-                printf("%lu%c ", poly[d][i].load(std::memory_order_relaxed), (i<2*d ? ',' : ']'));
-            printf("\n");
+                fprintf(stderr,"%lu%c ", poly[d][i].load(std::memory_order_relaxed), (i<2*d ? ',' : ']'));
+            fprintf(stderr,"\n");
         }
 #endif
     }
-    std::cout << std::setprecision(std::numeric_limits<double>::digits10)
+    std::cerr << std::setprecision(std::numeric_limits<double>::digits10)
               << "Total time: " << currentTime() << "s" << std::endl;
 }
