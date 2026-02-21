@@ -86,9 +86,9 @@ counter init_level(hashset levels[], matrix start) {
     levels[0].init(3);
     levels[1] = hashset(); // level 1 (current)
     levels[1].init(3);
-    counter Orbit = representative(start); // modifies start
+    counter Stab = representative(start); // modifies start
     levels[1].insert(start);
-    return Orbit;
+    return Orbit(Stab);
 }
 
 // explore and count all successors of the current level
