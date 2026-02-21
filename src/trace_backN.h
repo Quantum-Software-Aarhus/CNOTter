@@ -95,8 +95,9 @@ void print_trace(Matrix m, Matrix goal, const trace &tr, perm pi) {
         printf("cx q[%u],q[%u];\n",i,j);
         m = m.addrow(i,j);
     }
-    printf("\nResult of the circuit:\n");
-    m.print();
+    fflush(stdout);
+    fprintf(stderr,"\nResult of the circuit:\n");
+    m.print(); 
 #if SWAP==1
     printf("\nRow permutation:\n");
     pretty_perm(pi);
@@ -107,9 +108,9 @@ void print_trace(Matrix m, Matrix goal, const trace &tr, perm pi) {
     m.print();
 #endif
     if (m==goal)
-        printf("The result is correct!\n");
+        fprintf(stderr,"The result is correct!\n");
     else
-        printf("Error: result is incorrect!\n");
+        fprintf(stderr,"Error: result is incorrect!\n");
 }
 
 #endif

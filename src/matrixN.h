@@ -18,11 +18,11 @@ using perm = byte[N];       // permutation of N elements
 
 void pretty_perm(const perm pi) {
     for (byte i=0; i<N; i++)
-        printf("%3u", i);
-    printf("\n");
+        fprintf(stderr,"%3u", i);
+    fprintf(stderr,"\n");
     for (byte i=0; i<N; i++)
-        printf("%3u", pi[i]);
-    printf("\n");
+        fprintf(stderr,"%3u", pi[i]);
+    fprintf(stderr,"\n");
 }
 
 // return the identity permutation in pi
@@ -94,13 +94,13 @@ public:
     /* pretty print matrix */
     void print() const {
         std::string delimiter(N*2-1,'=');
-        std::cout << delimiter << std::endl;
+        std::cerr << delimiter << std::endl;
             for (uint8_t i=0; i<N; i++) {
                 for (uint8_t j=0; j<N; j++)
-                    printf("%c ", (get(i,j) ? '1' : '0'));
-                printf("\n");   
+                    fprintf(stderr,"%c ", (get(i,j) ? '1' : '0'));
+                fprintf(stderr,"\n");   
             }
-        std::cout << delimiter << std::endl;
+        std::cerr << delimiter << std::endl;
     };
 
     static Matrix read(std::string filename) {
